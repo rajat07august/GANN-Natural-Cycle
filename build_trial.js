@@ -126,11 +126,46 @@ function getSrc1() {
   return _src1Cache;
 }
 
+// Remove zero-volume holiday fillers and fix corporate-action price artifacts
+function cleanOHLC(rows) {
+  const out = [];
+  for (let i = 0; i < rows.length; i++) {
+    let { date, open, high, low, close } = rows[i];
+
+    // Fix unadjusted-open artifacts: when HIGH or LOW is >2x away from the day's close,
+    // the open was unadjusted on an ex-bonus/split day while intraday trade was at the new level.
+    // NSE circuit limits mean HIGH/close > 2.0 or close/LOW > 2.0 can never happen legitimately.
+    if (high > close * 2.0) high = +(close * 1.05).toFixed(2);
+    if (close > low  * 2.0) low  = +(close * 0.95).toFixed(2);
+    // Clamp open to same bounds so candlestick renders correctly
+    if (open > close * 2.0) open = +(close * 1.02).toFixed(2);
+    if (close > open * 2.0) open = +(close * 0.98).toFixed(2);
+
+    // Fix full-row spike: close itself diverges >35% from both neighbours and immediately reverses
+    // (covers zero-vol holiday rows that slipped through, and single-day price errors)
+    if (i > 0 && i < rows.length - 1) {
+      const pc = out[out.length - 1].close;
+      const nc = rows[i + 1].close;
+      const rb = close / pc;
+      const ra = nc / close;
+      if ((rb > 1.35 && ra < 1 / 1.35) || (rb < 1 / 1.35 && ra > 1.35)) {
+        const sf = pc / close;
+        out.push({ date, open: +(open*sf).toFixed(2), high: +(high*sf).toFixed(2), low: +(low*sf).toFixed(2), close: +(close*sf).toFixed(2) });
+        continue;
+      }
+    }
+
+    out.push({ date, open, high, low, close });
+  }
+  return out;
+}
+
 function mergeRows(sym) {
   // Prefer adjusted data from Yahoo Finance
   const adjPath = path.join(ADJ_DIR, `${sym}.csv`);
   if (fs.existsSync(adjPath)) {
-    return parseCSV(fs.readFileSync(adjPath, 'utf8'))
+    const rows = parseCSV(fs.readFileSync(adjPath, 'utf8'))
+      .filter(r => parseInt(r.Volume || r.volume || 0) > 0)  // drop zero-volume holiday fillers
       .map(r => ({
         date:  (r.Date  || r.date  || '').trim(),
         open:  parseFloat(r.Open  || r.open  || 0),
@@ -140,6 +175,7 @@ function mergeRows(sym) {
       }))
       .filter(r => r.date && r.high > 0)
       .sort((a, b) => a.date.localeCompare(b.date));
+    return cleanOHLC(rows);
   }
 
   // Fallback: merge NIFTY50_all.csv + bhavcopy processed/ (for symbols with no YF data)
@@ -169,7 +205,7 @@ function mergeRows(sym) {
     const existing = new Set(rows.map(r => r.date));
     rows2.forEach(r => { if (!existing.has(r.date)) rows.push(r); });
   }
-  return rows.filter(r => r.date >= '2000-01-01').sort((a,b) => a.date.localeCompare(b.date));
+  return cleanOHLC(rows.filter(r => r.date >= '2000-01-01').sort((a,b) => a.date.localeCompare(b.date)));
 }
 
 // ── Build OHLC data ───────────────────────────────────────────
