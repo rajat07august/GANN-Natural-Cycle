@@ -532,11 +532,23 @@ function computeZigZag(rows, dev, dep) {
     const date=rows[i][0], high=rows[i][2], low=rows[i][3];
     if (trend===null||trend==='UP') {
       if (high>=lhP){lhP=high;lhD=date;lhI=i;}
-      if (low<=lhP*(1-dev/100)&&(i-lhI)>=dep){pivots.push({date:lhD,type:'H',price:lhP});trend='DOWN';llP=low;llD=date;llI=i;}
+      if (low<=lhP*(1-dev/100)&&(i-lhI)>=dep){
+        pivots.push({date:lhD,type:'H',price:lhP});
+        trend='DOWN';
+        // Look back from lhI+1 to i to find the actual minimum low
+        llP=low; llD=date; llI=i;
+        for (let j=lhI+1;j<=i;j++){if(rows[j][3]<llP){llP=rows[j][3];llD=rows[j][0];llI=j;}}
+      }
     }
     if (trend==='DOWN') {
       if (low<=llP){llP=low;llD=date;llI=i;}
-      if (high>=llP*(1+dev/100)&&(i-llI)>=dep){pivots.push({date:llD,type:'L',price:llP});trend='UP';lhP=high;lhD=date;lhI=i;}
+      if (high>=llP*(1+dev/100)&&(i-llI)>=dep){
+        pivots.push({date:llD,type:'L',price:llP});
+        trend='UP';
+        // Look back from llI+1 to i to find the actual maximum high
+        lhP=high; lhD=date; lhI=i;
+        for (let j=llI+1;j<=i;j++){if(rows[j][2]>lhP){lhP=rows[j][2];lhD=rows[j][0];lhI=j;}}
+      }
     }
   }
   if (trend==='UP') pivots.push({date:lhD,type:'H',price:lhP});
