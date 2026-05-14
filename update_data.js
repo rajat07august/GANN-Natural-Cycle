@@ -5,7 +5,8 @@
 // Steps:
 //   1. Download any missing NSE bhavcopy files → nse-bhavdata/YYYY/
 //   2. Parse new bhavcopy rows, append to processed/SYMBOL.csv
-//   3. Rebuild trial_natural_cycle.html + all ZigZag chart HTMLs
+//   3. Re-fetch adjusted OHLC for all symbols from Yahoo Finance → processed_adj/
+//   4. Rebuild trial_natural_cycle.html + all ZigZag chart HTMLs
 //
 // Usage:  node update_data.js
 //         node update_data.js --download-only
@@ -336,8 +337,16 @@ async function main() {
     console.log(`  Total: ${totalAppended} row(s) appended across ${ALL_TRACKED_SYMS.size} stocks.`);
   }
 
-  // ── STEP 3: Rebuild HTML files ─────────────────────────────
-  console.log('\n[3/3] Rebuilding HTML dashboards...');
+  // ── STEP 3: Refresh adjusted OHLC from Yahoo Finance ──────
+  console.log('\n[3/4] Refreshing adjusted OHLC from Yahoo Finance...');
+  try {
+    execSync(`node "${path.join(GANN_DIR, 'fetch_adjusted.js')}"`, { stdio:'inherit' });
+  } catch(e) {
+    console.error('  ✗ fetch_adjusted.js failed:', e.stderr?.toString() || e.message);
+  }
+
+  // ── STEP 4: Rebuild HTML files ─────────────────────────────
+  console.log('\n[4/4] Rebuilding HTML dashboards...');
 
   try {
     console.log('  Building trial_natural_cycle.html...');

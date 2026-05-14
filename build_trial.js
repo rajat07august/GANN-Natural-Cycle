@@ -114,6 +114,9 @@ function parseCSV(text) {
   });
 }
 
+const ADJ_DIR = 'j:/Swing Trading/Swing Trading/processed_adj';
+const RAW_DIR = 'j:/Swing Trading/Swing Trading/processed';
+
 let _src1Cache = null;
 function getSrc1() {
   if (!_src1Cache) {
@@ -124,6 +127,22 @@ function getSrc1() {
 }
 
 function mergeRows(sym) {
+  // Prefer adjusted data from Yahoo Finance
+  const adjPath = path.join(ADJ_DIR, `${sym}.csv`);
+  if (fs.existsSync(adjPath)) {
+    return parseCSV(fs.readFileSync(adjPath, 'utf8'))
+      .map(r => ({
+        date:  (r.Date  || r.date  || '').trim(),
+        open:  parseFloat(r.Open  || r.open  || 0),
+        high:  parseFloat(r.High  || r.high  || 0),
+        low:   parseFloat(r.Low   || r.low   || 0),
+        close: parseFloat(r.Close || r.close || 0),
+      }))
+      .filter(r => r.date && r.high > 0)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  // Fallback: merge NIFTY50_all.csv + bhavcopy processed/ (for symbols with no YF data)
   const histNames = HIST_NAMES[sym] || [sym];
   const symSet = new Set(histNames);
   const rows = getSrc1()
@@ -136,9 +155,9 @@ function mergeRows(sym) {
       close: parseFloat(r.Close || 0),
     }))
     .filter(r => r.date && r.high > 0);
-  const p2 = `j:/Swing Trading/Swing Trading/processed/${sym}.csv`;
-  if (fs.existsSync(p2)) {
-    const rows2 = parseCSV(fs.readFileSync(p2,'utf8'))
+  const rawPath = path.join(RAW_DIR, `${sym}.csv`);
+  if (fs.existsSync(rawPath)) {
+    const rows2 = parseCSV(fs.readFileSync(rawPath, 'utf8'))
       .map(r => ({
         date:  (r.Date  || r.date  || '').trim(),
         open:  parseFloat(r.Open  || r.open  || 0),
