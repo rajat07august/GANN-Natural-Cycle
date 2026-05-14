@@ -930,11 +930,11 @@ function cfRender() {
 
   const filtered = sortedDays.filter(d=>dateMap[d].length>=_cfMin);
 
-  if (_cfView==='date') cfRenderDate(filtered, dateMap, monthIdx, year);
+  if (_cfView==='date') cfRenderDate(filtered, dateMap, monthIdx, year, dev, dep);
   else cfRenderStock(stockConf, monthIdx, year);
 }
 
-function cfRenderDate(days, dateMap, monthIdx, year) {
+function cfRenderDate(days, dateMap, monthIdx, year, dev, dep) {
   const el=document.getElementById('dateView');
   const monthName=MONTHS_LONG[monthIdx];
   if (!days.length) {
