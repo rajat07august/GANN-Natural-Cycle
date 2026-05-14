@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gann Cycle Dashboard – Natural & Dynamic Cycles</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --accent: #58a6ff; --green: #3fb950; --red: #f85149;
+    --orange: #e3b341; --text: #c9d1d9; --sub: #8b949e;
+    --high-bg: #0f2a1a; --low-bg: #2a0f0f; --hl-bg: #2a220f;
+    --row-hover: #1f2937;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; }
+
+  /* ── Header ── */
+  header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: .5px; }
+  header .sub { color: var(--sub); font-size: 11px; }
+  .badge { background: #1f3a5f; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; }
+
+  /* ── Tab Nav ── */
+  .tab-nav { display: flex; background: var(--panel); border-bottom: 1px solid var(--border); padding: 0 24px; }
+  .tab-btn { padding: 12px 20px; cursor: pointer; color: var(--sub); border: none; background: none; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all .2s; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Tab Content ── */
+  .tab-content { display: none; padding: 20px 24px; }
+  .tab-content.active { display: block; }
+
+  /* ── Controls ── */
+  .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+  .controls label { color: var(--sub); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  select, input[type=text] { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12px; outline: none; }
+  select:focus, input[type=text]:focus { border-color: var(--accent); }
+  .ctrl-group { display: flex; flex-direction: column; gap: 4px; }
+
+  /* ── Natural Cycle Grid ── */
+  .nc-wrapper { overflow-x: auto; }
+  .nc-table { border-collapse: collapse; width: 100%; min-width: 900px; }
+  .nc-table th { background: #1c2128; color: var(--sub); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 8px 6px; border: 1px solid var(--border); text-align: center; position: sticky; top: 0; z-index: 2; }
+  .nc-table th:first-child { text-align: left; padding-left: 12px; width: 60px; }
+  .nc-table td { border: 1px solid var(--border); padding: 5px 6px; text-align: center; vertical-align: top; min-width: 80px; font-size: 11px; line-height: 1.5; }
+  .nc-table td:first-child { color: var(--accent); font-weight: 700; font-size: 12px; padding-left: 10px; text-align: left; background: #1c2128; position: sticky; left: 0; z-index: 1; }
+  .nc-table tr:hover td { background: var(--row-hover) !important; }
+  .nc-table tr:hover td:first-child { background: #1a2130 !important; }
+
+  /* Cell type badges */
+  .cell-h { color: var(--green); background: var(--high-bg); border-radius: 4px; padding: 2px 5px; display: inline-block; margin: 1px; white-space: nowrap; }
+  .cell-l { color: var(--red); background: var(--low-bg); border-radius: 4px; padding: 2px 5px; display: inline-block; margin: 1px; white-space: nowrap; }
+  .cell-hl { color: var(--orange); background: var(--hl-bg); border-radius: 4px; padding: 2px 5px; display: inline-block; margin: 1px; white-space: nowrap; }
+
+  /* ── Legend ── */
+  .legend { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .dot-h { width: 10px; height: 10px; background: var(--green); border-radius: 2px; }
+  .dot-l { width: 10px; height: 10px; background: var(--red); border-radius: 2px; }
+  .dot-hl { width: 10px; height: 10px; background: var(--orange); border-radius: 2px; }
+
+  /* ── Info Box ── */
+  .info-box { background: #1c2a3a; border: 1px solid #2d5a8e; border-radius: 8px; padding: 14px 18px; margin-bottom: 18px; }
+  .info-box h3 { color: var(--accent); font-size: 13px; margin-bottom: 8px; }
+  .info-box p { color: var(--sub); font-size: 12px; line-height: 1.6; }
+  .info-box ul { color: var(--sub); font-size: 12px; line-height: 1.8; padding-left: 18px; margin-top: 6px; }
+
+  /* ── Dynamic Cycle Table ── */
+  .dc-table { border-collapse: collapse; width: 100%; }
+  .dc-table th { background: #1c2128; color: var(--sub); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 10px 12px; border: 1px solid var(--border); text-align: left; position: sticky; top: 0; }
+  .dc-table td { border: 1px solid var(--border); padding: 8px 12px; font-size: 12px; vertical-align: middle; }
+  .dc-table tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+  .dc-table tr:hover td { background: var(--row-hover); }
+  .dc-tag { display: inline-block; background: #1a3a1a; color: var(--green); border: 1px solid #2d5a2d; border-radius: 3px; padding: 1px 6px; font-size: 10px; font-weight: 600; margin-right: 4px; }
+  .dc-tag.nifty { background: #1a2a3a; color: var(--accent); border-color: #2d4a6a; }
+  .dc-tag.bn { background: #3a1a3a; color: #e879f9; border-color: #6a2d6a; }
+  .dc-tag.fn { background: #3a2a1a; color: var(--orange); border-color: #6a4a2d; }
+  .dc-tag.stock { background: #2a2a1a; color: #dcd77a; border-color: #5a5a2d; }
+
+  .date-start { color: var(--sub); }
+  .date-end { color: var(--text); font-weight: 600; }
+  .days-count { color: var(--orange); font-weight: 700; font-size: 13px; }
+
+  /* ── Instrument Grid ── */
+  .inst-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 16px 0; }
+  .inst-chip { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; font-size: 11px; cursor: pointer; transition: all .15s; color: var(--sub); }
+  .inst-chip:hover { border-color: var(--accent); color: var(--accent); background: #1a2130; }
+  .inst-chip.index { border-color: #2d4a6a; color: var(--accent); }
+  .inst-chip.active { background: #1a2a3a; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+  /* ── Holiday Table ── */
+  .hol-table { border-collapse: collapse; width: 100%; max-width: 700px; }
+  .hol-table th { background: #1c2128; color: var(--sub); font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 8px 14px; border: 1px solid var(--border); text-align: left; }
+  .hol-table td { border: 1px solid var(--border); padding: 7px 14px; font-size: 12px; }
+  .hol-table tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+  .hol-name { color: var(--orange); font-weight: 500; }
+
+  /* ── Stats Row ── */
+  .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; flex: 1; min-width: 120px; }
+  .stat-card .num { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .stat-card .lbl { font-size: 10px; color: var(--sub); text-transform: uppercase; margin-top: 2px; }
+
+  /* ── Pattern Panel ── */
+  .pattern-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 16px; }
+  .pattern-panel h4 { font-size: 12px; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+  .pattern-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+  .pattern-month { text-align: center; }
+  .pattern-month .month-label { font-size: 9px; color: var(--sub); font-weight: 700; margin-bottom: 4px; }
+  .pattern-cell { font-size: 9px; padding: 2px 3px; border-radius: 3px; margin-bottom: 2px; text-align: center; }
+
+  /* ── Search Input ── */
+  .search-wrap { position: relative; }
+  .search-wrap input { padding-left: 28px; }
+  .search-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--sub); font-size: 12px; }
+
+  /* ── Scrollable table container ── */
+  .table-container { overflow-y: auto; max-height: 600px; border: 1px solid var(--border); border-radius: 8px; }
+  .table-container .nc-table th { top: 0; }
+
+  /* ── Section title ── */
+  .sec-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .controls { flex-direction: column; align-items: flex-start; }
+    .stats-row { flex-direction: column; }
+    .pattern-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Gann Cycle Dashboard</h1>
+    <div class="sub">Natural Cycle &amp; Dynamic Cycle Analysis · Indian Markets</div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;">
+    <span class="badge">NIFTY</span>
+    <span class="badge">BANKNIFTY</span>
+    <span class="badge">FINNIFTY</span>
+    <span class="badge">70+ Stocks</span>
+  </div>
+</header>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('natural')">📅 Natural Cycle</button>
+  <button class="tab-btn" onclick="showTab('dynamic')">🔄 Dynamic Cycle</button>
+  <button class="tab-btn" onclick="showTab('instruments')">📊 Instruments</button>
+  <button class="tab-btn" onclick="showTab('holidays')">🎉 Market Holidays</button>
+  <button class="tab-btn" onclick="showTab('about')">ℹ️ About Gann</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: NATURAL CYCLE
+═══════════════════════════════════════════════════════ -->
+<div id="tab-natural" class="tab-content active">
+
+  <div class="info-box">
+    <h3>What is the Natural Cycle?</h3>
+    <p>W.D. Gann's Natural Cycle identifies <strong>calendar dates</strong> within each month that historically produce
+    significant market Highs (H) or Lows (L). By studying decades of price data, these dates reveal a
+    recurring "natural" rhythm — markets tend to reverse near the same calendar dates year after year.
+    Traders use this matrix to anticipate potential turning points without needing price data.</p>
+    <ul>
+      <li><span style="color:var(--green)">H</span> = Historical High on that date in that month-year</li>
+      <li><span style="color:var(--red)">L</span> = Historical Low on that date in that month-year</li>
+      <li><span style="color:var(--orange)">H/L</span> = Both events occurred (high then low, or vice versa) within the same month</li>
+    </ul>
+  </div>
+
+  <div class="stats-row" id="nc-stats"></div>
+
+  <div class="controls">
+    <div class="ctrl-group">
+      <label>Instrument</label>
+      <select id="nc-instrument" onchange="renderNC()">
+        <option value="NIFTY">NIFTY (All Years – 1995 to 2025)</option>
+        <option value="BANKNIFTY">BANKNIFTY (2005 to 2023)</option>
+        <option value="FINNIFTY">FINNIFTY (2012 to 2023)</option>
+        <option value="TCS">TCS (2004 to 2024)</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <label>Year Filter</label>
+      <select id="nc-year" onchange="renderNC()">
+        <option value="all">All Years</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <label>Show Only</label>
+      <select id="nc-filter" onchange="renderNC()">
+        <option value="all">All Events</option>
+        <option value="H">Highs Only</option>
+        <option value="L">Lows Only</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="dot-h"></div> High (H)</div>
+    <div class="legend-item"><div class="dot-l"></div> Low (L)</div>
+    <div class="legend-item"><div class="dot-hl"></div> High &amp; Low (H/L)</div>
+    <div style="color:var(--sub);font-size:11px;margin-left:auto;">Dates shown as DD (day of month)</div>
+  </div>
+
+  <div class="table-container">
+    <table class="nc-table" id="nc-table">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+          <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+        </tr>
+      </thead>
+      <tbody id="nc-body"></tbody>
+    </table>
+  </div>
+
+  <div class="pattern-panel" id="pattern-panel">
+    <h4>Date Frequency Pattern (most recurring H/L dates per month)</h4>
+    <div class="pattern-grid" id="pattern-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: DYNAMIC CYCLE
+═══════════════════════════════════════════════════════ -->
+<div id="tab-dynamic" class="tab-content">
+
+  <div class="info-box">
+    <h3>What is the Dynamic Cycle?</h3>
+    <p>The Dynamic Cycle counts <strong>actual trading days</strong> (excluding weekends and Indian market holidays)
+    between consecutive market Highs and Lows. Gann discovered that markets repeat turning points at
+    harmonic intervals: <strong>45, 90, 120, 135, 180, 270, 360 trading days</strong>.
+    When the current date falls at one of these harmonic counts from a previous major high or low,
+    the market has a higher probability of reversing.</p>
+    <ul>
+      <li>The <em>Start Date</em> is a significant historical high or low</li>
+      <li>The <em>Current/End Date</em> is when the cycle count lands</li>
+      <li>The high/low of the candle on the Start Date acts as <strong>major support/resistance</strong></li>
+      <li>70+ instruments tracked · 6,100+ cycle relationships recorded</li>
+    </ul>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">6,112</div><div class="lbl">Cycle Records</div></div>
+    <div class="stat-card"><div class="num">70+</div><div class="lbl">Instruments</div></div>
+    <div class="stat-card"><div class="num">2011</div><div class="lbl">Earliest Cycle</div></div>
+    <div class="stat-card"><div class="num">2025</div><div class="lbl">Latest End Date</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-group">
+      <label>Search Instrument</label>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="dc-search" placeholder="e.g. NIFTY, SBIN, TCS…" oninput="renderDC()">
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <label>Category</label>
+      <select id="dc-cat" onchange="renderDC()">
+        <option value="all">All Categories</option>
+        <option value="index">Indices (NIFTY / BN / FN)</option>
+        <option value="stock">Stocks</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <label>End Date (Cycle Land)</label>
+      <select id="dc-enddate" onchange="renderDC()">
+        <option value="all">All Dates</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-container" style="max-height:520px;">
+    <table class="dc-table" id="dc-table">
+      <thead>
+        <tr>
+          <th>Instrument</th>
+          <th>Type</th>
+          <th>Cycle Start Date</th>
+          <th>Cycle End Date</th>
+          <th>Calendar Days</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody id="dc-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: INSTRUMENTS
+═══════════════════════════════════════════════════════ -->
+<div id="tab-instruments" class="tab-content">
+  <div class="sec-title">All Tracked Instruments</div>
+
+  <div class="info-box" style="margin-bottom:16px;">
+    <h3>Coverage Overview</h3>
+    <p>The Dynamic Cycle workbook tracks 70+ NSE-listed instruments.
+    The Natural Cycle workbook covers NIFTY, BANKNIFTY, FINNIFTY, and 20+ individual stocks
+    with year-by-year H/L date patterns going back to 1995.</p>
+  </div>
+
+  <div class="sec-title" style="margin-top:16px;">Index Instruments</div>
+  <div class="inst-grid" id="index-grid"></div>
+
+  <div class="sec-title" style="margin-top:20px;">Stock Instruments (Dynamic Cycle)</div>
+  <div class="inst-grid" id="stock-grid"></div>
+
+  <div class="sec-title" style="margin-top:20px;">Stock Instruments (Natural Cycle)</div>
+  <div class="inst-grid" id="nc-stock-grid"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: HOLIDAYS
+═══════════════════════════════════════════════════════ -->
+<div id="tab-holidays" class="tab-content">
+  <div class="info-box">
+    <h3>Why Holidays Matter in Gann Analysis</h3>
+    <p>Dynamic Cycles count <strong>trading days only</strong>.
+    Indian market holidays must be excluded from day counts. The workbook maintains a complete holiday
+    calendar (NSE-listed holidays from 2004 onward) to ensure accurate cycle calculations.</p>
+  </div>
+
+  <div class="sec-title">NSE Market Holidays (recurring)</div>
+  <table class="hol-table">
+    <thead>
+      <tr><th>#</th><th>Holiday Name</th><th>Typical Period</th></tr>
+    </thead>
+    <tbody id="hol-body"></tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: ABOUT
+═══════════════════════════════════════════════════════ -->
+<div id="tab-about" class="tab-content">
+  <div class="info-box" style="max-width:720px;">
+    <h3>W.D. Gann – Father of Cycle Theory</h3>
+    <p>William Delbert Gann (1878–1955) was an American finance trader who developed unique technical
+    analysis tools. He believed that markets move in predictable geometric, mathematical, and time-based
+    cycles derived from natural law.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;margin-top:16px;">
+    <div class="info-box">
+      <h3>Natural Cycle Theory</h3>
+      <p>Markets follow calendar-based natural time cycles. Key dates within each month recur as significant
+      highs or lows across decades. By mapping these dates in a Year × Month grid, traders can see which
+      specific day-numbers are "natural" turning points for a given instrument.</p>
+      <ul style="margin-top:10px;">
+        <li>No price data required — purely time-based</li>
+        <li>Works across years (20–30 year look-back)</li>
+        <li>Per-instrument specificity (NIFTY cycles differ from BANKNIFTY)</li>
+        <li>Identifies "natural" days: 7th, 14th, 21st, 28th common</li>
+      </ul>
+    </div>
+    <div class="info-box">
+      <h3>Dynamic Cycle Theory</h3>
+      <p>Gann measured time in <strong>trading days</strong> from major pivots. When a fixed number
+      of trading days from a past high/low aligns with the present, the market is "due" to react.
+      Harmonic counts used:</p>
+      <ul style="margin-top:10px;">
+        <li>45 trading days (≈ 9 weeks)</li>
+        <li>90 trading days (≈ 18 weeks / 1 quarter)</li>
+        <li>120 trading days (≈ 6 months)</li>
+        <li>180 trading days (≈ 1 year × ½)</li>
+        <li>270 trading days (≈ 1 year × ¾)</li>
+        <li>360 trading days (≈ 1 full market year)</li>
+      </ul>
+    </div>
+    <div class="info-box">
+      <h3>How to Use This Dashboard</h3>
+      <ul>
+        <li>Open <strong>Natural Cycle</strong> → select instrument → scan rows for the current month → any H or L near today's date is a potential turning point</li>
+        <li>Open <strong>Dynamic Cycle</strong> → filter by instrument → check if today's date appears as an "End Date" → review the Start Date price high/low for support/resistance</li>
+        <li>Confluence of Natural + Dynamic cycles on the same date = <em>high-probability setup</em></li>
+      </ul>
+    </div>
+    <div class="info-box">
+      <h3>File Sources</h3>
+      <ul>
+        <li><code>Natural Cycle.xlsx</code> — 48 sheets, NIFTY (1995–2026), BANKNIFTY, FINNIFTY, 20+ stocks</li>
+        <li><code>Dynamic Cycle_.xlsm</code> — 74 sheets, 70+ instruments, 6,100+ cycle entries, VBA macros</li>
+        <li>Both files saved at: <code>Gann/6/1/</code></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     EMBEDDED DATA + JAVASCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+// ── Tab Switching ──────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Excel Serial → JS Date ─────────────────────────────
+function excelDate(serial) {
+  const d = new Date(Math.round((serial - 25569) * 864e5));
+  return d.toISOString().split('T')[0]; // yyyy-mm-dd
+}
+function fmtDate(s) {
+  const d = new Date(s);
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ═══════════════════════════════════════════════════════
+// NATURAL CYCLE DATA
+// ═══════════════════════════════════════════════════════
+const ncData = {
+  NIFTY: {
+    title: 'NIFTY  HIGH / LOW  –  MONTH × YEAR',
+    years: {
+      1995: {Jan:'',Feb:'',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'',Nov:'06 H / 29 L',Dec:'28 H'},
+      1996: {Jan:'29 L',Feb:'14 H',Mar:'19 L',Apr:'25 H',May:'28 L',Jun:'17 H',Jul:'',Aug:'',Sep:'',Oct:'08 L',Nov:'',Dec:'04 L'},
+      1997: {Jan:'16 H',Feb:'03 L / 25 L',Mar:'05 H',Apr:'',May:'',Jun:'',Jul:'10 H / 21 L',Aug:'06 H',Sep:'23 L',Oct:'21 H',Nov:'',Dec:'11 L'},
+      1998: {Jan:'05 H / 29 L',Feb:'',Mar:'',Apr:'22 H',May:'06 H',Jun:'23 L',Jul:'17 H',Aug:'19 L',Sep:'01 L / 25 H',Oct:'20 L',Nov:'11 H / 30 L',Dec:'14 H / 17 L'},
+      1999: {Jan:'11 H',Feb:'09 L',Mar:'10 H',Apr:'28 L',May:'20 H / 28 L',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'14 H',Nov:'02 L',Dec:''},
+      2000: {Jan:'',Feb:'23 H',Mar:'',Apr:'06 L / 10 H',May:'24 L',Jun:'',Jul:'13 H / 25 L',Aug:'',Sep:'13 H',Oct:'19 L',Nov:'',Dec:'14 H / 26 L'},
+      2001: {Jan:'',Feb:'16 H',Mar:'13 L / 16 H',Apr:'16 L',May:'30 H',Jun:'',Jul:'',Aug:'',Sep:'21 L',Oct:'',Nov:'',Dec:'06 H'},
+      2002: {Jan:'',Feb:'27 H',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'02 L',Sep:'02 H',Oct:'28 L',Nov:'',Dec:'26 H'},
+      2003: {Jan:'02 H',Feb:'24 H',Mar:'24 H',Apr:'28 L',May:'',Jun:'',Jul:'15 H / 22 L',Aug:'',Sep:'09 H / 19 L',Oct:'17 H / 24 L',Nov:'06 H / 21 L',Dec:''},
+      2004: {Jan:'09 H',Feb:'',Mar:'23 L',Apr:'23 H',May:'17 L / 26 H',Jun:'24 L',Jul:'',Aug:'',Sep:'',Oct:'',Nov:'',Dec:''},
+      2005: {Jan:'04 H / 12 L',Feb:'',Mar:'09 H',Apr:'07 H / 29 L',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'05 H / 28 L',Nov:'',Dec:''},
+      2006: {Jan:'',Feb:'',Mar:'',Apr:'',May:'11 H',Jun:'14 L',Jul:'13 H / 24 L',Aug:'',Sep:'',Oct:'',Nov:'',Dec:'08 H / 13 L'},
+      2007: {Jan:'',Feb:'08 H',Mar:'05 L',Apr:'',May:'',Jun:'',Jul:'24 H',Aug:'17 L',Sep:'',Oct:'',Nov:'',Dec:''},
+      2008: {Jan:'08 H / 22 L',Feb:'04 H',Mar:'18 L',Apr:'02 H',May:'16 L',Jun:'',Jul:'12 H',Aug:'',Sep:'',Oct:'27 L',Nov:'',Dec:''},
+      2009: {Jan:'',Feb:'',Mar:'06 L',Apr:'',May:'',Jun:'12 H',Jul:'13 L',Aug:'',Sep:'',Oct:'20 H',Nov:'03 L',Dec:''},
+      2010: {Jan:'06 H',Feb:'08 L',Mar:'',Apr:'07 H',May:'25 L',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'14 H / 29 L',Nov:'08 H / 26 L',Dec:'06 H / 10 L'},
+      2011: {Jan:'04 H',Feb:'11 L',Mar:'',Apr:'06 H',May:'',Jun:'20 L',Jul:'08 H',Aug:'26 L',Sep:'',Oct:'28 H',Nov:'',Dec:'20 L'},
+      2012: {Jan:'02 L',Feb:'22 H',Mar:'',Apr:'',May:'',Jun:'04 L',Jul:'10 H / 26 L',Aug:'23 H',Sep:'06 L',Oct:'05 H',Nov:'19 L',Dec:''},
+      2013: {Jan:'29 H',Feb:'',Mar:'',Apr:'10 L',May:'20 H',Jun:'24 L',Jul:'23 H',Aug:'28 L',Sep:'19 H',Oct:'01 L',Nov:'03 H / 22 L',Dec:'09 H'},
+      2014: {Jan:'',Feb:'04 L',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'08 H',Oct:'17 L',Nov:'',Dec:'04 H'},
+      2015: {Jan:'07 L / 30 H',Feb:'',Mar:'04 H',Apr:'15 H',May:'',Jun:'12 L',Jul:'',Aug:'08 L',Sep:'',Oct:'26 H',Nov:'',Dec:''},
+      2016: {Jan:'',Feb:'29 L',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'07 H',Oct:'',Nov:'',Dec:'26 L'},
+      2017: {Jan:'',Feb:'',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'02 H / 11 L',Sep:'19 H / 28 L',Oct:'',Nov:'06 H',Dec:'06 L'},
+      2018: {Jan:'29 H',Feb:'',Mar:'23 L',Apr:'',May:'15 H / 23 L',Jun:'',Jul:'',Aug:'28 H',Sep:'',Oct:'26 L',Nov:'',Dec:''},
+      2019: {Jan:'29 L',Feb:'',Mar:'',Apr:'',May:'',Jun:'03 H',Jul:'',Aug:'23 L',Sep:'23 H',Oct:'07 L',Nov:'',Dec:''},
+      2020: {Jan:'20 H',Feb:'',Mar:'24 L',Apr:'30 H',May:'18 L',Jun:'',Jul:'',Aug:'31 H',Sep:'24 L',Oct:'30 L',Nov:'',Dec:''},
+      2021: {Jan:'29 L',Feb:'16 H',Mar:'',Apr:'22 L',May:'',Jun:'',Jul:'28 L',Aug:'',Sep:'',Oct:'19 H',Nov:'',Dec:''},
+      2022: {Jan:'18 H',Feb:'',Mar:'08 L',Apr:'04 H',May:'',Jun:'17 L',Jul:'',Aug:'',Sep:'14 H / 30 L',Oct:'',Nov:'',Dec:''},
+      2023: {Jan:'',Feb:'16 H',Mar:'20 L',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'15 H',Oct:'26 L',Nov:'',Dec:''},
+      2024: {Jan:'24 L',Feb:'',Mar:'11 H / 20 L',Apr:'10 H',May:'',Jun:'04 L',Jul:'',Aug:'',Sep:'27 H',Oct:'',Nov:'21 L',Dec:'05 H'},
+      2025: {Jan:'27 L',Feb:'05 H',Mar:'04 H / 25 L',Apr:'07 L',May:'',Jun:'30 H',Jul:'',Aug:'08 L',Sep:'',Oct:'',Nov:'',Dec:''},
+    }
+  },
+  BANKNIFTY: {
+    title: 'BANK NIFTY  HIGH / LOW  –  MONTH × YEAR',
+    years: {
+      2005: {Jan:'',Feb:'',Mar:'',Apr:'',May:'',Jun:'20 L',Jul:'29 H',Aug:'24 L',Sep:'',Oct:'04 H / 28 L',Nov:'',Dec:''},
+      2006: {Jan:'06 H',Feb:'',Mar:'07 H / 28 L',Apr:'',May:'11 H',Jun:'14 L',Jul:'05 H / 19 L',Aug:'',Sep:'',Oct:'',Nov:'',Dec:'08 H / 12 L'},
+      2007: {Jan:'18 H',Feb:'',Mar:'16 L / 23 H',Apr:'03 L',May:'',Jun:'',Jul:'20 H',Aug:'22 L',Sep:'',Oct:'16 H / 19 L',Nov:'05 H / 12 L',Dec:'11 H / 19 L'},
+      2008: {Jan:'14 H / 22 L / 29 H',Feb:'',Mar:'18 L',Apr:'',May:'05 H',Jun:'',Jul:'02 L',Aug:'12 H',Sep:'',Oct:'27 L',Nov:'',Dec:'02 L'},
+      2009: {Jan:'06 H',Feb:'',Mar:'09 L',Apr:'',May:'',Jun:'',Jul:'06 H / 13 L',Aug:'',Sep:'',Oct:'20 H',Nov:'03 L',Dec:''},
+      2010: {Jan:'',Feb:'05 L',Mar:'',Apr:'30 H',May:'25 L',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'14 H / 29 L',Nov:'05 H / 26 L',Dec:'02 H'},
+      2011: {Jan:'',Feb:'10 L / 18 H',Mar:'',Apr:'25 H',May:'',Jun:'20 L',Jul:'25 H',Aug:'26 L',Sep:'21 H',Oct:'05 L / 31 H',Nov:'23 L',Dec:'07 H / 20 L'},
+      2012: {Jan:'02 L',Feb:'22 H',Mar:'',Apr:'',May:'18 L',Jun:'',Jul:'11 H',Aug:'',Sep:'',Oct:'05 H / 31 L',Nov:'',Dec:''},
+      2013: {Jan:'29 H',Feb:'28 L',Mar:'11 H',Apr:'10 L',May:'20 H',Jun:'26 L',Jul:'15 H',Aug:'28 L',Sep:'19 H',Oct:'01 L',Nov:'05 H / 13 L',Dec:'09 H'},
+      2014: {Jan:'',Feb:'04 L',Mar:'',Apr:'',May:'16 H',Jun:'',Jul:'14 L',Aug:'',Sep:'11 H',Oct:'08 L',Nov:'',Dec:'17 L'},
+      2015: {Jan:'28 H',Feb:'10 L',Mar:'04 H',Apr:'',May:'',Jun:'12 L',Jul:'17 H',Aug:'',Sep:'07 L',Oct:'26 H',Nov:'',Dec:''},
+      2016: {Jan:'',Feb:'29 L',Mar:'',Apr:'',May:'',Jun:'10 H / 24 L',Jul:'',Aug:'',Sep:'07 H',Oct:'',Nov:'09 L / 11 H',Dec:'26 L'},
+      2017: {Jan:'',Feb:'',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'02 H',Sep:'28 L',Oct:'',Nov:'28 H',Dec:'18 L'},
+      2018: {Jan:'29 H',Feb:'',Mar:'23 L',Apr:'',May:'',Jun:'',Jul:'22 L',Aug:'28 H',Sep:'',Oct:'08 L',Nov:'',Dec:'03 H / 11 L'},
+      2019: {Jan:'29 L',Feb:'',Mar:'',Apr:'',May:'31 H',Jun:'',Jul:'',Aug:'23 L',Sep:'23 H',Oct:'07 L',Nov:'',Dec:''},
+      2020: {Jan:'13 H',Feb:'03 L / 13 H',Mar:'23 L',Apr:'30 H',May:'22 L',Jun:'',Jul:'',Aug:'31 H',Sep:'24 L',Oct:'30 L',Nov:'',Dec:''},
+      2021: {Jan:'28 L',Feb:'16 H',Mar:'',Apr:'19 L',May:'',Jun:'28 L',Jul:'',Aug:'',Sep:'',Oct:'25 H',Nov:'',Dec:''},
+      2022: {Jan:'',Feb:'03 H',Mar:'08 L',Apr:'04 H',May:'',Jun:'17 L',Jul:'',Aug:'',Sep:'15 H / 30 L',Oct:'',Nov:'',Dec:'14 H'},
+      2023: {Jan:'30 L',Feb:'16 H',Mar:'16 L',Apr:'',May:'',Jun:'',Jul:'21 H',Aug:'',Sep:'15 H',Oct:'26 L',Nov:'',Dec:''},
+    }
+  },
+  FINNIFTY: {
+    title: 'FIN NIFTY  HIGH / LOW  –  MONTH × YEAR',
+    years: {
+      2012: {Jan:'',Feb:'21 H',Mar:'',Apr:'',May:'18 L',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'',Nov:'',Dec:''},
+      2013: {Jan:'07 H',Feb:'',Mar:'',Apr:'09 L',May:'20 H',Jun:'',Jul:'',Aug:'28 L',Sep:'',Oct:'',Nov:'',Dec:'09 H'},
+      2014: {Jan:'',Feb:'04 L',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'',Nov:'',Dec:''},
+      2015: {Jan:'28 H',Feb:'',Mar:'',Apr:'',May:'',Jun:'12 L',Jul:'16 H',Aug:'',Sep:'07 L',Oct:'26 H',Nov:'',Dec:''},
+      2016: {Jan:'',Feb:'29 L',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'07 H',Oct:'',Nov:'',Dec:'26 L'},
+      2017: {Jan:'',Feb:'',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'01 H',Sep:'28 L',Oct:'',Nov:'',Dec:''},
+      2018: {Jan:'29 H',Feb:'',Mar:'23 L',Apr:'',May:'',Jun:'',Jul:'',Aug:'09 H',Sep:'',Oct:'08 L',Nov:'',Dec:''},
+      2019: {Jan:'',Feb:'',Mar:'',Apr:'',May:'',Jun:'',Jul:'05 H',Aug:'23 L',Sep:'',Oct:'',Nov:'',Dec:''},
+      2020: {Jan:'',Feb:'12 H',Mar:'24 L',Apr:'30 H',May:'22 L',Jun:'',Jul:'',Aug:'31 H',Sep:'24 L',Oct:'',Nov:'',Dec:''},
+      2021: {Jan:'',Feb:'16 H',Mar:'',Apr:'12 L',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'25 H',Nov:'',Dec:'20 L'},
+      2022: {Jan:'12 H',Feb:'',Mar:'08 L',Apr:'04 H',May:'',Jun:'17 L',Jul:'',Aug:'',Sep:'15 H / 30 L',Oct:'',Nov:'',Dec:'01 H'},
+      2023: {Jan:'',Feb:'',Mar:'16 L',Apr:'',May:'',Jun:'',Jul:'27 H',Aug:'',Sep:'',Oct:'26 L',Nov:'',Dec:''},
+    }
+  },
+  TCS: {
+    title: 'TCS  HIGH / LOW  –  MONTH × YEAR',
+    years: {
+      2004: {Jan:'',Feb:'',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'10 L',Oct:'',Nov:'',Dec:''},
+      2009: {Jan:'14 H',Feb:'',Mar:'03 L / 09 H / 22 L',Apr:'04 H / 14 L / 18 H / 26 L',May:'10 H / 23 L',Jun:'',Jul:'',Aug:'11 H / 19 L',Sep:'01 H / 09 L',Oct:'',Nov:'',Dec:''},
+      2011: {Jan:'21 H',Feb:'11 L',Mar:'',Apr:'06 H',May:'',Jun:'20 L',Jul:'08 H',Aug:'22 L',Sep:'',Oct:'17 H / 18 L',Nov:'',Dec:''},
+      2012: {Jan:'03 H / 18 L',Feb:'24 H',Mar:'',Apr:'23 L',May:'',Jun:'',Jul:'',Aug:'',Sep:'14 H',Oct:'',Nov:'',Dec:'18 L'},
+      2014: {Jan:'14 H',Feb:'',Mar:'20 L',Apr:'16 H',May:'19 L',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'07 H / 21 L',Nov:'',Dec:'02 H / 16 L'},
+      2018: {Jan:'24 H',Feb:'',Mar:'26 L',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'01 H / 29 L',Nov:'',Dec:''},
+      2019: {Jan:'',Feb:'',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'03 H',Oct:'11 L / 31 H',Nov:'',Dec:'12 L'},
+      2020: {Jan:'08 H',Feb:'',Mar:'13 L / 30 H',Apr:'03 L',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'',Nov:'',Dec:''},
+      2021: {Jan:'25 H',Feb:'26 L',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'08 H / 29 L',Nov:'',Dec:''},
+      2022: {Jan:'17 H',Feb:'24 L',Mar:'',Apr:'05 H',May:'',Jun:'17 L / 27 H',Jul:'15 L',Aug:'11 H',Sep:'26 L',Oct:'',Nov:'',Dec:''},
+      2023: {Jan:'',Feb:'16 H',Mar:'',Apr:'17 L',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'',Nov:'',Dec:''},
+      2024: {Jan:'(current year)',Feb:'',Mar:'',Apr:'',May:'',Jun:'',Jul:'',Aug:'',Sep:'',Oct:'',Nov:'',Dec:''},
+    }
+  }
+};
+
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── Render Natural Cycle ──────────────────────────────
+function classifyCell(val) {
+  if (!val || val === '(current year)') return 'empty';
+  const hasH = /H/i.test(val);
+  const hasL = /L/i.test(val);
+  if (hasH && hasL) return 'hl';
+  if (hasH) return 'h';
+  if (hasL) return 'l';
+  return 'empty';
+}
+
+function renderCellValue(val, filter) {
+  if (!val || val === '(current year)') return '';
+  const type = classifyCell(val);
+  if (filter === 'H' && type === 'l') return '';
+  if (filter === 'L' && type === 'h') return '';
+  const parts = val.split(/\s*\/\s*/);
+  return parts.map(p => {
+    const t = classifyCell(p);
+    const cls = t === 'h' ? 'cell-h' : t === 'l' ? 'cell-l' : t === 'hl' ? 'cell-hl' : '';
+    return cls ? `<span class="${cls}">${p.trim()}</span>` : `<span>${p.trim()}</span>`;
+  }).join(' ');
+}
+
+function renderNC() {
+  const inst = document.getElementById('nc-instrument').value;
+  const yearSel = document.getElementById('nc-year').value;
+  const filter = document.getElementById('nc-filter').value;
+  const data = ncData[inst];
+  if (!data) return;
+
+  const yearSelect = document.getElementById('nc-year');
+  const currentYears = Array.from(yearSelect.options).map(o => o.value);
+  const dataYears = Object.keys(data.years).map(Number).sort();
+
+  // Populate year dropdown
+  if (currentYears.length <= 1) {
+    dataYears.forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      yearSelect.appendChild(opt);
+    });
+  }
+
+  const yearsToShow = yearSel === 'all' ? dataYears : [parseInt(yearSel)];
+
+  const tbody = document.getElementById('nc-body');
+  tbody.innerHTML = '';
+
+  let hCount = 0, lCount = 0, hlCount = 0, totalRows = 0;
+
+  yearsToShow.forEach(yr => {
+    const row = data.years[yr];
+    if (!row) return;
+    const hasData = months.some(m => row[m] && row[m] !== '(current year)');
+    if (!hasData && yearSel === 'all') return;
+    totalRows++;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${yr}</td>` + months.map(m => {
+      const val = row[m] || '';
+      const rendered = renderCellValue(val, filter);
+      const type = classifyCell(val);
+      if (type === 'h') hCount++;
+      else if (type === 'l') lCount++;
+      else if (type === 'hl') hlCount++;
+      return `<td>${rendered}</td>`;
+    }).join('');
+    tbody.appendChild(tr);
+  });
+
+  // Update stats
+  document.getElementById('nc-stats').innerHTML = `
+    <div class="stat-card"><div class="num" style="color:var(--sub)">${dataYears.length}</div><div class="lbl">Years of Data</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--green)">${hCount}</div><div class="lbl">High Events</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--red)">${lCount}</div><div class="lbl">Low Events</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--orange)">${hlCount}</div><div class="lbl">H+L Same Month</div></div>
+  `;
+
+  renderPatternPanel(data, filter);
+}
+
+function renderPatternPanel(data, filter) {
+  const freq = {};
+  months.forEach(m => { freq[m] = {}; });
+
+  Object.values(data.years).forEach(row => {
+    months.forEach(m => {
+      const val = row[m] || '';
+      if (!val || val === '(current year)') return;
+      const parts = val.split(/\s*\/\s*/);
+      parts.forEach(p => {
+        const dayMatch = p.match(/(\d{1,2})\s*([HL])/i);
+        if (dayMatch) {
+          const day = dayMatch[1].padStart(2,'0');
+          const type = dayMatch[2].toUpperCase();
+          if (filter !== 'all' && type !== filter) return;
+          const key = `${day}${type}`;
+          freq[m][key] = (freq[m][key] || 0) + 1;
+        }
+      });
+    });
+  });
+
+  const grid = document.getElementById('pattern-grid');
+  grid.innerHTML = '';
+  months.forEach(m => {
+    const sorted = Object.entries(freq[m]).sort((a,b) => b[1]-a[1]).slice(0,6);
+    const div = document.createElement('div');
+    div.className = 'pattern-month';
+    div.innerHTML = `<div class="month-label">${m}</div>` +
+      sorted.map(([k,v]) => {
+        const t = k.slice(-1);
+        const cls = t === 'H' ? 'cell-h' : 'cell-l';
+        return `<div class="pattern-cell ${cls}">${k} ×${v}</div>`;
+      }).join('') + (sorted.length === 0 ? '<div style="color:var(--sub);font-size:9px;">—</div>' : '');
+    grid.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// DYNAMIC CYCLE DATA (sample from RESULT sheet)
+// ═══════════════════════════════════════════════════════
+const indices = ['NIFTY','BANKNIFTY','FINNIFTY'];
+
+const dcData = [
+  // format: [company, startExcelSerial, endExcelSerial]
+  ['BANKNIFTY',     40897, 45748],
+  ['DeepakNTR',     43894, 45748],
+  ['DeepakNTR',     44092, 45748],
+  ['NIFTY',         44225, 45748],
+  ['TataSteel',     44225, 45748],
+  ['BHEL',          44264, 45748],
+  ['Coromandel',    44372, 45748],
+  ['DeepakNTR',     45292, 45748],
+  ['Gail',          45356, 45748],
+  ['Coromandel',    43693, 45749],
+  ['TataSteel',     43844, 45749],
+  ['UPL',           44095, 45749],
+  ['Jindal Steel',  44228, 45749],
+  ['IDFC FIrst Bank',44228,45749],
+  ['Laurus Labs',   44228, 45749],
+  ['FINNIFTY',      44494, 45749],
+  ['Apollo Hospital',44494,45749],
+  ['DeepakNTR',     44627, 45749],
+  ['Jindal Steel',  44958, 45749],
+  ['SBIN',          44958, 45749],
+  ['TataSteel',     45009, 45749],
+  ['FINNIFTY',      45225, 45749],
+  ['NIFTY',         45225, 45749],
+  ['BANKNIFTY',     45225, 45749],
+  ['DeepakNTR',     45225, 45749],
+  ['Apollo Hospital',45225,45749],
+  ['HindPetro',     45225, 45749],
+  ['Gail',          43844, 45750],
+  ['Ambuja Cem',    43985, 45750],
+  ['PI Industries', 44095, 45750],
+  ['BHEL',          44228, 45750],
+  ['HAL',           44228, 45750],
+  ['Hindalco',      44228, 45750],
+  ['NIFTY',         44494, 45750],
+  ['BANKNIFTY',     44494, 45750],
+  ['SBIN',          44494, 45750],
+  ['PFC',           44494, 45750],
+  ['ONGC',          44225, 45751],
+  ['TataComm',      44225, 45751],
+  ['DivisLab',      44225, 45751],
+  ['POWERGRID',     44228, 45751],
+  ['DLF',           44372, 45751],
+  ['VOltas',        44494, 45751],
+  ['SBI Life',      44627, 45751],
+  ['TataMotors',    44627, 45751],
+  ['Coal India',    44800, 45751],
+  ['Astral',        44958, 45751],
+  ['UltraTech Cem', 45009, 45751],
+  ['Adaniports',    45009, 45751],
+  ['Dabur',         45225, 45751],
+  ['ICICI',         45225, 45751],
+  ['Indigo',        45225, 45751],
+  ['IRCTC',         45356, 45751],
+  ['Apollotyre',    43693, 45752],
+  ['MGL',           43844, 45752],
+  ['JUBLFOOD',      44095, 45752],
+  ['TCS',           44228, 45752],
+  ['TechM',         44228, 45752],
+  ['Maruti',        44372, 45752],
+  ['JSW Steel',     44627, 45752],
+  ['CIPLA',         44627, 45752],
+  ['CUB',           44800, 45752],
+  ['Petronet',      44958, 45752],
+  ['Zee',           45009, 45752],
+  ['AuroPharma',    45225, 45752],
+  ['KotakBank',     45356, 45752],
+  ['Reliance',      43693, 45753],
+  ['LT',            43844, 45753],
+  ['TataPower',     44095, 45753],
+  ['Lupin',         44228, 45753],
+  ['CanBank',       44372, 45753],
+  ['IGL',           44494, 45753],
+  ['NTPC',          44627, 45753],
+  ['TataChem',      44800, 45753],
+  ['Mcdowell',      44958, 45753],
+  ['IndHotel',      45009, 45753],
+  ['ZydusLife',     45225, 45753],
+  ['Bharti Airtel', 45356, 45753],
+  ['Titan',         43693, 45754],
+  ['Marico',        43844, 45754],
+  ['Ashok Leyland', 44095, 45754],
+  ['NationalAlum',  44228, 45754],
+  ['BalramChini',   44372, 45754],
+  ['M&M',           44494, 45754],
+  ['HAL',           44627, 45754],
+  ['BEL',           44800, 45754],
+  ['TataSteel',     45009, 45754],
+];
+
+function getType(company) {
+  if (['NIFTY','BANKNIFTY','FINNIFTY'].includes(company)) return 'index';
+  return 'stock';
+}
+
+function renderDC() {
+  const search = (document.getElementById('dc-search').value || '').toLowerCase();
+  const cat = document.getElementById('dc-cat').value;
+  const endDate = document.getElementById('dc-enddate').value;
+
+  // Populate end date dropdown on first run
+  const endSel = document.getElementById('dc-enddate');
+  if (endSel.options.length <= 1) {
+    const uniqueEnds = [...new Set(dcData.map(d => excelDate(d[2])))].sort();
+    uniqueEnds.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d; o.textContent = fmtDate(d);
+      endSel.appendChild(o);
+    });
+  }
+
+  const filtered = dcData.filter(([company, start, end]) => {
+    const typeOk = cat === 'all' || getType(company) === cat;
+    const searchOk = !search || company.toLowerCase().includes(search);
+    const endOk = endDate === 'all' || excelDate(end) === endDate;
+    return typeOk && searchOk && endOk;
+  });
+
+  const tbody = document.getElementById('dc-body');
+  tbody.innerHTML = '';
+
+  filtered.forEach(([company, start, end]) => {
+    const startStr = excelDate(start);
+    const endStr = excelDate(end);
+    const calDays = Math.round((new Date(endStr) - new Date(startStr)) / 86400000);
+    const type = getType(company);
+    const tagCls = company === 'NIFTY' ? 'nifty' :
+                   company === 'BANKNIFTY' ? 'bn' :
+                   company === 'FINNIFTY' ? 'fn' : 'stock';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${company}</strong></td>
+      <td><span class="dc-tag ${tagCls}">${type.toUpperCase()}</span></td>
+      <td class="date-start">${fmtDate(startStr)}</td>
+      <td class="date-end">${fmtDate(endStr)}</td>
+      <td class="days-count">${calDays.toLocaleString()}</td>
+      <td style="color:var(--sub);font-size:11px;">H/L on start date = key S/R</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:24px;">No matching records</td></tr>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// INSTRUMENTS TAB
+// ═══════════════════════════════════════════════════════
+const allIndices = ['NIFTY','BANKNIFTY','FINNIFTY'];
+const dcStocks = [
+  'Jindal Steel','DeepakNTR','Apollo Hospital','HindPetro','Gail','Coromandel',
+  'IDFC FIrst Bank','BHEL','TataSteel','UPL','BEL','NationalAlum','Laurus Labs',
+  'SBIN','BalramChini','M&M','HAL','PFC','TataComm','DivisLab','ONGC','Ambuja Cem',
+  'PI Industries','HeroMotoCo','POWERGRID','DLF','Voltas','SBI Life','TataMotors',
+  'HDFC','Coal India','Astral','UltraTech Cem','Adaniports','Dabur','ICICI',
+  'Indigo','Coforge','IRCTC','Apollotyre','MGL','JUBLFOOD','Hindalco','TCS',
+  'TechM','Maruti','JSW Steel','CIPLA','CUB','Petronet','Zee','AuroPharma',
+  'KotakBank','Reliance','LT','TataPower','Lupin','CanBank','IGL','NTPC',
+  'TataChem','Mcdowell','IndHotel','ZydusLife','Bharti Airtel','Titan','Marico',
+  'Ashok Leyland'
+];
+const ncStocks = [
+  'TCS','NationalAlum','KotakBank','HDFC Bank','SAIL','Titan','Bharti Airtel',
+  'BajajFinsv','MFSL','Vedl','NMDC','BergerPaint','Grasim','GNFC','Federal Bank',
+  'Motherson','Oberoi Realty','Indigo','Astral','Maruti'
+];
+
+function renderInstruments() {
+  const ig = document.getElementById('index-grid');
+  ig.innerHTML = allIndices.map(i =>
+    `<div class="inst-chip index">${i}</div>`
+  ).join('');
+
+  const sg = document.getElementById('stock-grid');
+  sg.innerHTML = dcStocks.map(s =>
+    `<div class="inst-chip">${s}</div>`
+  ).join('');
+
+  const ncg = document.getElementById('nc-stock-grid');
+  ncg.innerHTML = ncStocks.map(s =>
+    `<div class="inst-chip">${s}</div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// HOLIDAYS
+// ═══════════════════════════════════════════════════════
+const holidays = [
+  ['New Year Day',         'January 1'],
+  ['Republic Day',         'January 26'],
+  ['Mahashivratri',        'February/March (varies)'],
+  ['Holi (2nd Day)',       'March (varies)'],
+  ['Gudi Padwa',          'March/April (varies)'],
+  ['Ram Navami',           'March/April (varies)'],
+  ['Dr. Ambedkar Jayanti','April 14'],
+  ['Good Friday',          'March/April (varies)'],
+  ['Mahavir Jayanti',      'April (varies)'],
+  ['Id-Ul-Fitr (Ramzan Id)','Varies (Islamic calendar)'],
+  ['Buddha Purnima',       'April/May (varies)'],
+  ['Maharashtra Day',      'May 1'],
+  ['Bakri Id',             'Varies (Islamic calendar)'],
+  ['Independence Day',     'August 15'],
+  ['Ganesh Chaturthi',     'August/September (varies)'],
+  ['Moharram / Muharram',  'Varies (Islamic calendar)'],
+  ['Mahatma Gandhi Jayanti','October 2'],
+  ['Dussehra / Dasera',    'October (varies)'],
+  ['Diwali (Laxmi Puja)',  'October/November (varies)'],
+  ['Diwali – Balipratipada','October/November (varies)'],
+  ['Gurunanak Jayanti',    'November (varies)'],
+  ['Christmas',            'December 25'],
+  ['Id-E-Milad',           'Varies (Islamic calendar)'],
+  ['Parsi New Year',       'August (varies)'],
+];
+
+function renderHolidays() {
+  const tbody = document.getElementById('hol-body');
+  tbody.innerHTML = holidays.map((h, i) =>
+    `<tr>
+      <td style="color:var(--sub)">${i+1}</td>
+      <td class="hol-name">${h[0]}</td>
+      <td style="color:var(--sub)">${h[1]}</td>
+    </tr>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function init() {
+  renderNC();
+  renderDC();
+  renderInstruments();
+  renderHolidays();
+}
+init();
+</script>
+</body>
+</html>

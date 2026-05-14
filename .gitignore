@@ -1,0 +1,13 @@
+# Raw Excel source files (large binary, not committed)
+Gann/1/
+Gann/2/
+Gann/3/
+Gann/4/
+Gann/5/
+Gann/6/1/
+
+# Superseded standalone output
+Gann/6/confluence.html
+
+# Node
+node_modules/
