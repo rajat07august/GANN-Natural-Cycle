@@ -1,0 +1,19 @@
+# Raw Excel source files
+Gann/1/
+Gann/2/
+Gann/3/
+Gann/4/
+Gann/5/
+Gann/6/1/
+
+# Build-time data (not needed at runtime)
+Dataset/
+
+# Build scripts and dev files
+*.js
+CLAUDE.md
+node_modules/
+.vercel/
+
+# Superseded output
+Gann/6/confluence.html
