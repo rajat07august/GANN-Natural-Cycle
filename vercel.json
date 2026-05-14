@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/Gann/6/trial_natural_cycle.html" }
+  ]
+}
