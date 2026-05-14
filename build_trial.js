@@ -128,12 +128,24 @@ function mergeRows(sym) {
   const symSet = new Set(histNames);
   const rows = getSrc1()
     .filter(r => symSet.has(r.Symbol))
-    .map(r => ({ date:r.Date.trim(), high:parseFloat(r.High||0), low:parseFloat(r.Low||0) }))
+    .map(r => ({
+      date:  r.Date.trim(),
+      open:  parseFloat(r.Open  || 0),
+      high:  parseFloat(r.High  || 0),
+      low:   parseFloat(r.Low   || 0),
+      close: parseFloat(r.Close || 0),
+    }))
     .filter(r => r.date && r.high > 0);
   const p2 = `j:/Swing Trading/Swing Trading/processed/${sym}.csv`;
   if (fs.existsSync(p2)) {
     const rows2 = parseCSV(fs.readFileSync(p2,'utf8'))
-      .map(r => ({ date:(r.Date||r.date||'').trim(), high:parseFloat(r.High||r.high||0), low:parseFloat(r.Low||r.low||0) }))
+      .map(r => ({
+        date:  (r.Date  || r.date  || '').trim(),
+        open:  parseFloat(r.Open  || r.open  || 0),
+        high:  parseFloat(r.High  || r.high  || 0),
+        low:   parseFloat(r.Low   || r.low   || 0),
+        close: parseFloat(r.Close || r.close || 0),
+      }))
       .filter(r => r.date && r.high > 0);
     const existing = new Set(rows.map(r => r.date));
     rows2.forEach(r => { if (!existing.has(r.date)) rows.push(r); });
@@ -149,7 +161,7 @@ for (const { sym, isIndex } of ALL_INSTRUMENTS) {
   if (isIndex) continue;
   const rows = mergeRows(sym);
   console.error(`  ${sym}: ${rows.length} rows (${rows[0]?.date} → ${rows[rows.length-1]?.date})`);
-  ohlcBlocks[sym] = rows.map(r => `['${r.date}',${r.high.toFixed(2)},${r.low.toFixed(2)}]`).join(',');
+  ohlcBlocks[sym] = rows.map(r => `['${r.date}',${r.open.toFixed(2)},${r.high.toFixed(2)},${r.low.toFixed(2)},${r.close.toFixed(2)}]`).join(',');
 }
 
 const ohlcDataJS = ALL_INSTRUMENTS
@@ -562,9 +574,10 @@ const GAPS        = [20,15,13,12,10,6,5,4,3,2,1];
 function computeZigZag(rows, dev, dep) {
   const pivots = [];
   if (!rows || !rows.length) return pivots;
-  let trend=null, lhP=rows[0][1], lhD=rows[0][0], lhI=0, llP=rows[0][2], llD=rows[0][0], llI=0;
+  // format: [date, open, high, low, close] — high=idx2, low=idx3
+  let trend=null, lhP=rows[0][2], lhD=rows[0][0], lhI=0, llP=rows[0][3], llD=rows[0][0], llI=0;
   for (let i=1;i<rows.length;i++) {
-    const [date,high,low]=rows[i];
+    const date=rows[i][0], high=rows[i][2], low=rows[i][3];
     if (trend===null||trend==='UP') {
       if (high>=lhP){lhP=high;lhD=date;lhI=i;}
       if (low<=lhP*(1-dev/100)&&(i-lhI)>=dep){pivots.push({date:lhD,type:'H',price:lhP});trend='DOWN';llP=low;llD=date;llI=i;}
@@ -710,21 +723,30 @@ function renderModalChart() {
     layout: { background:{type:'solid',color:'#0d1117'}, textColor:'#c9d1d9' },
     grid:   { vertLines:{color:'#21262d'}, horzLines:{color:'#21262d'} },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor:'#30363d', scaleMargins:{top:.1,bottom:.1} },
+    rightPriceScale: { borderColor:'#30363d', scaleMargins:{top:.08,bottom:.08} },
     timeScale: { borderColor:'#30363d', timeVisible:false },
   });
 
-  const pivots = computeZigZag(rows, dev, dep);
+  // Candlestick series
+  const candleSeries = _modalChart.addCandlestickSeries({
+    upColor:'#3fb950', downColor:'#f85149',
+    borderUpColor:'#3fb950', borderDownColor:'#f85149',
+    wickUpColor:'#3fb950', wickDownColor:'#f85149',
+  });
+  candleSeries.setData(rows.map(r => ({
+    time:r[0], open:r[1], high:r[2], low:r[3], close:r[4],
+  })));
 
-  // ZigZag line
+  // ZigZag overlay line
+  const pivots = computeZigZag(rows, dev, dep);
   const zzLine = _modalChart.addLineSeries({
-    color:'#e3b341', lineWidth:2, crosshairMarkerVisible:true,
+    color:'#e3b341', lineWidth:2, crosshairMarkerVisible:false,
     lastValueVisible:false, priceLineVisible:false,
   });
   zzLine.setData(pivots.map(p => ({ time:p.date, value:p.price })));
 
-  // H/L markers
-  zzLine.setMarkers(pivots.map(p => ({
+  // H/L markers on candle series
+  candleSeries.setMarkers(pivots.map(p => ({
     time:  p.date,
     position: p.type==='H' ? 'aboveBar' : 'belowBar',
     color:    p.type==='H' ? '#3fb950'  : '#f85149',
