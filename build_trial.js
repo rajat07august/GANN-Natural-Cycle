@@ -287,32 +287,42 @@ const html = `<!DOCTYPE html>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   :root {
-    --bg:#0d1117; --panel:#161b22; --border:#30363d;
-    --accent:#58a6ff; --green:#3fb950; --red:#f85149; --orange:#e3b341;
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --border:#30363d; --border-sub:#21262d;
+    --accent:#58a6ff; --accent-dim:rgba(88,166,255,.12); --accent-dim2:rgba(88,166,255,.2);
+    --green:#3fb950; --red:#f85149; --orange:#e3b341;
     --text:#c9d1d9; --sub:#8b949e;
     --hbg:#0d2818; --lbg:#2d1010; --hlbg:#2d2010; --conf:#ffe066;
+    --shadow-sm:0 1px 4px rgba(0,0,0,.35); --shadow-md:0 4px 16px rgba(0,0,0,.5);
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:13px; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:13px; line-height:1.5; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:#484f58; }
 
   /* ── App shell ── */
-  .app-header { background:var(--panel); border-bottom:1px solid var(--border); padding:14px 24px 0; }
-  .app-title { color:var(--accent); font-size:17px; font-weight:700; margin-bottom:12px; }
+  .app-header { background:linear-gradient(180deg,var(--panel2) 0%,var(--panel) 100%); border-bottom:1px solid var(--border); padding:14px 24px 0; }
+  .app-title { color:var(--accent); font-size:18px; font-weight:800; letter-spacing:-.3px; margin-bottom:12px; }
   .app-title span { color:var(--sub); font-weight:400; font-size:13px; margin-left:8px; }
 
   /* ── Tabs ── */
-  .tab-nav { display:flex; gap:0; }
-  .tab-btn { background:transparent; border:none; color:var(--sub); font-size:13px; font-family:inherit; padding:9px 22px; cursor:pointer; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; white-space:nowrap; }
+  .tab-nav { display:flex; gap:2px; }
+  .tab-btn { background:transparent; border:none; color:var(--sub); font-size:13px; font-family:inherit; padding:9px 22px; cursor:pointer; border-bottom:2px solid transparent; transition:color .18s,border-color .18s; white-space:nowrap; font-weight:500; }
   .tab-btn:hover { color:var(--text); }
-  .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+  .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:700; }
   .tab-content { display:none; padding:24px; }
   .tab-content.active { display:block; }
 
   /* ── Shared controls ── */
-  .ctrl-row { display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px 20px; margin-bottom:20px; }
+  .ctrl-row { display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin-bottom:20px; box-shadow:var(--shadow-sm); }
   .ctrl { display:flex; flex-direction:column; gap:5px; }
-  .ctrl label { color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
-  .ctrl input, .ctrl select { background:var(--bg); border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:6px 10px; font-size:14px; font-weight:700; outline:none; cursor:pointer; }
+  .ctrl label { color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; }
+  .ctrl input, .ctrl select { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:6px 10px; font-size:14px; font-weight:600; outline:none; cursor:pointer; transition:border-color .15s, box-shadow .15s; font-family:inherit; }
+  .ctrl input:hover, .ctrl select:hover { border-color:var(--sub); }
+  .ctrl input:focus, .ctrl select:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }
   .ctrl input  { width:90px; text-align:center; font-size:18px; }
   .ctrl select { min-width:160px; }
   .ctrl select option { background:var(--bg); }
@@ -320,77 +330,81 @@ const html = `<!DOCTYPE html>
   .zz-wrap.hidden { display:none; }
 
   .cycle-pills { display:flex; flex-wrap:wrap; gap:6px; align-self:center; }
-  .pill { background:#1a2a3a; border:1px solid var(--border); color:var(--sub); border-radius:4px; padding:3px 8px; font-size:11px; }
+  .pill { background:var(--border-sub); border:1px solid var(--border); color:var(--sub); border-radius:20px; padding:3px 10px; font-size:11px; }
   .pill span { color:var(--accent); font-weight:700; }
 
   /* ── Shared badge styles ── */
-  .ev { border-radius:3px; padding:2px 5px; font-size:11px; display:inline-block; margin:1px; white-space:nowrap; font-weight:600; cursor:default; }
-  .ev-h  { background:var(--hbg);  color:var(--green);  border:1px solid #1a4a28; }
-  .ev-l  { background:var(--lbg);  color:var(--red);    border:1px solid #4a1a1a; }
-  .ev-hl { background:var(--hlbg); color:var(--orange); border:1px solid #4a3a1a; }
+  .ev { border-radius:5px; padding:2px 7px; font-size:11px; display:inline-block; margin:1px; white-space:nowrap; font-weight:700; cursor:default; letter-spacing:.1px; transition:opacity .12s; }
+  .ev:hover { opacity:.85; }
+  .ev-h  { background:var(--hbg);  color:var(--green);  border:1px solid #1f5a30; }
+  .ev-l  { background:var(--lbg);  color:var(--red);    border:1px solid #5a1f1f; }
+  .ev-hl { background:var(--hlbg); color:var(--orange); border:1px solid #5a3d1f; }
 
   /* ── Legend ── */
-  .legend { display:flex; gap:18px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
-  .leg { display:flex; align-items:center; gap:5px; font-size:11px; }
-  .dot { width:10px; height:10px; border-radius:2px; }
+  .legend { display:flex; gap:20px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
+  .leg { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--sub); }
+  .dot { width:9px; height:9px; border-radius:3px; flex-shrink:0; }
 
   /* ══ TAB 1 — Natural Cycle ══ */
-  .wrap { overflow-x:auto; }
+  .wrap { overflow-x:auto; border-radius:8px; }
   table.nc-table { border-collapse:collapse; width:100%; min-width:960px; }
-  .nc-table thead th { background:#1c2128; color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:8px 6px; border:1px solid var(--border); text-align:center; position:sticky; top:0; z-index:3; }
-  .nc-table thead th:first-child { text-align:left; padding-left:12px; min-width:120px; z-index:4; position:sticky; left:0; }
+  .nc-table thead th { background:var(--panel2); color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:9px 8px; border:1px solid var(--border); text-align:center; position:sticky; top:0; z-index:3; }
+  .nc-table thead th:first-child { text-align:left; padding-left:14px; min-width:130px; z-index:4; position:sticky; left:0; border-right:2px solid var(--border); }
   .nc-table thead th:nth-child(2) { min-width:55px; }
-  .nc-table tbody td { border:1px solid var(--border); padding:5px 6px; text-align:center; min-width:78px; vertical-align:top; }
-  .nc-table tbody td:first-child { text-align:left; padding:6px 10px; background:#1a1f28; font-size:11px; position:sticky; left:0; z-index:1; min-width:120px; }
-  .nc-table tbody td:nth-child(2) { color:var(--sub); font-size:11px; background:#161b22; text-align:center; }
-  .nc-table tbody tr:hover td { background:#1a2130 !important; }
-  .nc-table tbody tr:hover td:first-child { background:#1e2538 !important; }
+  .nc-table tbody td { border:1px solid var(--border); padding:6px 8px; text-align:center; min-width:78px; vertical-align:top; transition:background .1s; }
+  .nc-table tbody td:first-child { text-align:left; padding:7px 12px; background:#1a1f28; font-size:11px; position:sticky; left:0; z-index:1; min-width:130px; border-right:2px solid var(--border); }
+  .nc-table tbody td:nth-child(2) { color:var(--sub); font-size:11px; background:var(--panel); text-align:center; }
+  .nc-table tbody tr:hover td { background:#1e2533 !important; }
+  .nc-table tbody tr:hover td:first-child { background:#222d40 !important; }
   .yr-label { color:var(--accent); font-weight:700; font-size:13px; display:block; }
   .cycle-tag { color:var(--sub); font-size:10px; }
-  .conf-row td { background:#1a1810 !important; }
-  .conf-row td:first-child { background:#1a1810 !important; color:var(--conf); font-weight:700; }
+  .conf-row td { background:rgba(255,224,102,.05) !important; }
+  .conf-row td:first-child { background:rgba(255,224,102,.07) !important; color:var(--conf); font-weight:700; }
 
-  .conf-section { margin-top:24px; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:16px 20px; }
-  .conf-section h3 { color:var(--conf); font-size:13px; margin-bottom:12px; }
-  .conf-grid { display:grid; grid-template-columns:repeat(12,1fr); gap:8px; }
-  .conf-month-label { font-size:10px; font-weight:700; color:var(--sub); text-transform:uppercase; margin-bottom:6px; text-align:center; }
-  .conf-item { text-align:center; border-radius:4px; padding:3px 4px; margin-bottom:3px; font-size:10px; font-weight:700; }
-  .conf-h  { background:var(--hbg);  color:var(--green);  border:1px solid #1a4a28; }
-  .conf-l  { background:var(--lbg);  color:var(--red);    border:1px solid #4a1a1a; }
-  .conf-hl { background:var(--hlbg); color:var(--orange); border:1px solid #4a3a1a; }
-  .conf-count { font-size:9px; opacity:.7; }
+  .conf-section { margin-top:24px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px 22px; box-shadow:var(--shadow-sm); }
+  .conf-section h3 { color:var(--conf); font-size:13px; font-weight:700; margin-bottom:14px; letter-spacing:.2px; }
+  .conf-grid { display:grid; grid-template-columns:repeat(12,1fr); gap:10px; }
+  .conf-month-label { font-size:10px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; text-align:center; }
+  .conf-item { text-align:center; border-radius:5px; padding:3px 4px; margin-bottom:3px; font-size:10px; font-weight:700; }
+  .conf-h  { background:var(--hbg);  color:var(--green);  border:1px solid #1f5a30; }
+  .conf-l  { background:var(--lbg);  color:var(--red);    border:1px solid #5a1f1f; }
+  .conf-hl { background:var(--hlbg); color:var(--orange); border:1px solid #5a3d1f; }
+  .conf-count { font-size:9px; opacity:.65; }
 
   /* ══ TAB 2 — Confluence Calendar ══ */
-  .summary-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto; }
-  .stat { background:#1a2a3a; border:1px solid var(--border); border-radius:5px; padding:4px 10px; font-size:11px; color:var(--sub); }
+  .summary-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-left:auto; }
+  .stat { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:5px 12px; font-size:11px; color:var(--sub); }
   .stat span { color:var(--accent); font-weight:700; }
 
-  .filter-strip { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  .filter-strip { display:flex; gap:6px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
   .filter-strip label { color:var(--sub); font-size:11px; }
-  .fsep { width:1px; height:16px; background:var(--border); }
-  .filter-btn { background:#21262d; border:1px solid var(--border); color:var(--sub); border-radius:4px; padding:3px 10px; font-size:11px; cursor:pointer; }
-  .filter-btn.active { background:#388bfd22; border-color:var(--accent); color:var(--accent); }
-  .view-toggle { display:flex; gap:6px; margin-left:auto; }
-  .vtbtn { background:#21262d; border:1px solid var(--border); color:var(--sub); border-radius:4px; padding:3px 12px; font-size:11px; cursor:pointer; }
-  .vtbtn.active { background:#388bfd22; border-color:var(--accent); color:var(--accent); }
+  .fsep { width:1px; height:18px; background:var(--border); margin:0 2px; }
+  .filter-btn { background:transparent; border:1px solid var(--border); color:var(--sub); border-radius:20px; padding:4px 13px; font-size:11px; cursor:pointer; font-family:inherit; transition:color .15s,border-color .15s,background .15s; }
+  .filter-btn:hover { color:var(--text); border-color:var(--sub); }
+  .filter-btn.active { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .view-toggle { display:flex; gap:4px; margin-left:auto; background:var(--panel2); border:1px solid var(--border); border-radius:7px; padding:3px; }
+  .vtbtn { background:transparent; border:none; color:var(--sub); border-radius:5px; padding:3px 14px; font-size:11px; cursor:pointer; font-family:inherit; transition:color .15s,background .15s; }
+  .vtbtn.active { background:var(--accent-dim2); color:var(--accent); font-weight:600; }
 
-  #dateView { display:flex; flex-direction:column; gap:12px; }
-  .date-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
-  .date-header { display:flex; align-items:center; gap:12px; padding:10px 16px; background:#1c2128; border-bottom:1px solid var(--border); }
-  .date-num { font-size:28px; font-weight:700; color:var(--conf); line-height:1; min-width:42px; }
-  .date-sublabel { color:var(--sub); font-size:12px; }
-  .stock-count-badge { margin-left:auto; background:#3a3010; border:1px solid #6a5a10; color:var(--conf); border-radius:4px; padding:2px 8px; font-size:11px; font-weight:700; }
-  .stock-count-badge.multi { background:#0d2818; border-color:#1a4a28; color:var(--green); }
-  .stocks-grid { display:flex; flex-wrap:wrap; gap:8px; padding:12px 16px; }
-  .stock-chip { border-radius:6px; padding:6px 10px; font-size:11px; border:1px solid; min-width:140px; }
-  .chip-h  { background:var(--hbg);  border-color:#1a4a28; }
-  .chip-l  { background:var(--lbg);  border-color:#4a1a1a; }
-  .chip-hl { background:var(--hlbg); border-color:#4a3a1a; }
+  #dateView { display:flex; flex-direction:column; gap:10px; }
+  .date-card { background:var(--panel); border:1px solid var(--border); border-radius:10px; overflow:hidden; transition:border-color .15s, box-shadow .15s; }
+  .date-card:hover { border-color:#484f58; box-shadow:var(--shadow-md); }
+  .date-header { display:flex; align-items:center; gap:14px; padding:12px 18px; background:var(--panel2); border-bottom:1px solid var(--border); }
+  .date-num { font-size:30px; font-weight:800; color:var(--conf); line-height:1; min-width:44px; letter-spacing:-1px; }
+  .date-sublabel { color:var(--sub); font-size:12px; line-height:1.4; }
+  .stock-count-badge { margin-left:auto; background:#332b10; border:1px solid #5a4a18; color:var(--conf); border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
+  .stock-count-badge.multi { background:#0d2818; border-color:#1f5a30; color:var(--green); }
+  .stocks-grid { display:flex; flex-wrap:wrap; gap:8px; padding:14px 16px; }
+  .stock-chip { border-radius:8px; padding:8px 12px; font-size:11px; border:1px solid; min-width:148px; position:relative; transition:transform .15s, box-shadow .15s; }
+  .stock-chip:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.4); }
+  .chip-h  { background:var(--hbg);  border-color:#1f5a30; }
+  .chip-l  { background:var(--lbg);  border-color:#5a1f1f; }
+  .chip-hl { background:var(--hlbg); border-color:#5a3d1f; }
   .chip-sym  { font-weight:700; font-size:12px; margin-bottom:2px; }
   .chip-sym.h  { color:var(--green);  }
   .chip-sym.l  { color:var(--red);    }
   .chip-sym.hl { color:var(--orange); }
-  .chip-name { color:var(--sub); font-size:10px; margin-bottom:4px; }
+  .chip-name { color:var(--sub); font-size:10px; margin-bottom:5px; }
   .chip-meta .yr { color:var(--sub); margin-right:3px; font-size:10px; }
   .chip-count { float:right; font-weight:700; font-size:11px; }
   .chip-count.h  { color:var(--green);  }
@@ -399,39 +413,57 @@ const html = `<!DOCTYPE html>
 
   #stockView { display:none; }
   .stock-table { width:100%; border-collapse:collapse; }
-  .stock-table th { background:#1c2128; color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:8px 12px; border:1px solid var(--border); text-align:left; position:sticky; top:0; }
-  .stock-table td { border:1px solid var(--border); padding:8px 12px; vertical-align:top; }
+  .stock-table th { background:var(--panel2); color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:9px 12px; border:1px solid var(--border); text-align:left; position:sticky; top:0; }
+  .stock-table td { border:1px solid var(--border); padding:9px 12px; vertical-align:top; }
   .stock-table td:first-child { font-weight:700; color:var(--accent); min-width:110px; }
   .stock-table td:nth-child(2) { color:var(--sub); font-size:11px; min-width:180px; }
-  .stock-table tr:hover td { background:#1a2130; }
+  .stock-table tr:hover td { background:#1e2533; }
   .no-conf { color:#2a3040; font-style:italic; font-size:11px; }
 
   .empty-state { text-align:center; padding:60px 20px; color:var(--sub); font-size:13px; }
 
   /* ── Chart button ── */
-  .chart-btn { background:#21262d; border:1px solid var(--border); color:var(--sub); border-radius:5px; padding:5px 11px; font-size:12px; cursor:pointer; white-space:nowrap; transition:color .15s,border-color .15s; }
-  .chart-btn:hover { color:var(--accent); border-color:var(--accent); }
-  .chip-chart-btn { background:transparent; border:none; color:var(--sub); cursor:pointer; font-size:12px; padding:2px 4px; border-radius:3px; line-height:1; float:right; }
-  .chip-chart-btn:hover { color:var(--accent); background:#1a2a3a; }
+  .chart-btn { background:var(--panel2); border:1px solid var(--border); color:var(--sub); border-radius:7px; padding:6px 13px; font-size:12px; cursor:pointer; white-space:nowrap; transition:color .15s,border-color .15s,background .15s; font-family:inherit; }
+  .chart-btn:hover { color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+  .chip-chart-btn { background:transparent; border:none; color:var(--sub); cursor:pointer; font-size:12px; padding:2px 4px; border-radius:4px; line-height:1; float:right; transition:color .12s,background .12s; }
+  .chip-chart-btn:hover { color:var(--accent); background:rgba(88,166,255,.15); }
 
   /* ── Modal ── */
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:1000; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; z-index:1000; backdrop-filter:blur(3px); }
   .modal-overlay.open { display:flex; }
-  .modal-box { background:var(--panel); border:1px solid var(--border); border-radius:10px; width:92vw; max-width:1200px; height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.6); }
-  .modal-hdr { display:flex; align-items:center; gap:12px; padding:12px 18px; background:#1c2128; border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; }
-  .modal-sym { font-size:16px; font-weight:700; color:var(--accent); }
-  .modal-name { font-size:12px; color:var(--sub); }
+  .modal-box { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:1200px; height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,.7); }
+  .modal-hdr { display:flex; align-items:center; gap:12px; padding:13px 20px; background:var(--panel2); border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; }
+  .modal-sym { font-size:17px; font-weight:800; color:var(--accent); letter-spacing:-.2px; }
+  .modal-name { font-size:12px; color:var(--sub); margin-top:1px; }
   .modal-ctrls { display:flex; gap:10px; align-items:center; margin-left:auto; flex-wrap:wrap; }
-  .modal-ctrls select { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer; }
-  .modal-range-btns { display:flex; gap:4px; }
-  .range-btn { background:#21262d; border:1px solid var(--border); color:var(--sub); border-radius:4px; padding:3px 9px; font-size:11px; cursor:pointer; }
-  .range-btn.active { background:#388bfd22; border-color:var(--accent); color:var(--accent); }
-  .modal-close { background:transparent; border:none; color:var(--sub); font-size:18px; cursor:pointer; padding:2px 6px; border-radius:4px; margin-left:6px; }
-  .modal-close:hover { color:var(--text); background:#30363d; }
+  .modal-ctrls select { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:5px 9px; font-size:12px; cursor:pointer; font-family:inherit; transition:border-color .15s; }
+  .modal-ctrls select:hover { border-color:var(--sub); }
+  .modal-range-btns { display:flex; gap:3px; background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:2px; }
+  .range-btn { background:transparent; border:none; color:var(--sub); border-radius:5px; padding:3px 10px; font-size:11px; cursor:pointer; font-family:inherit; transition:color .15s,background .15s; }
+  .range-btn.active { background:var(--accent-dim2); color:var(--accent); font-weight:600; }
+  .modal-close { background:transparent; border:none; color:var(--sub); font-size:18px; cursor:pointer; padding:3px 8px; border-radius:6px; margin-left:6px; transition:color .15s,background .15s; line-height:1; }
+  .modal-close:hover { color:var(--text); background:var(--border); }
   .modal-body { flex:1; min-height:0; position:relative; }
   #modal-chart-container { width:100%; height:100%; }
   .modal-pivots { flex-shrink:0; max-height:90px; overflow-y:auto; padding:8px 16px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start; }
   .modal-no-data { display:flex; align-items:center; justify-content:center; height:100%; color:var(--sub); font-size:14px; }
+
+  /* ══ TAB 3 — Long Best Names ══ */
+  .lb-section-title { color:var(--sub); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; margin:24px 0 12px; display:flex; align-items:center; gap:8px; }
+  .lb-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .lb-wrap { overflow-x:auto; border-radius:8px; margin-bottom:28px; }
+  table.lb-table { border-collapse:collapse; width:100%; min-width:1000px; }
+  .lb-table thead th { background:var(--panel2); color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:8px 6px; border:1px solid var(--border); text-align:center; position:sticky; top:0; z-index:3; white-space:nowrap; }
+  .lb-table thead th:first-child { text-align:left; padding-left:14px; min-width:150px; z-index:4; position:sticky; left:0; border-right:2px solid var(--border); }
+  .lb-table tbody tr:hover td { background:#1e2533 !important; }
+  .lb-table tbody tr:hover td:first-child { background:#222d40 !important; }
+  .lb-sym-cell { text-align:left; padding:8px 12px; background:#1a1f28; position:sticky; left:0; z-index:1; border:1px solid var(--border); border-right:2px solid var(--border); }
+  .lb-sym { color:var(--accent); font-weight:700; font-size:13px; }
+  .lb-symname { color:var(--sub); font-size:10px; margin-top:1px; }
+  .lb-cell { border:1px solid var(--border); padding:5px 6px; text-align:center; min-width:72px; vertical-align:top; }
+  .lb-cell.empty { color:var(--border); font-size:12px; }
+  .lb-cell.has-conf { background:rgba(255,224,102,.03); }
+  #lb-upcoming { display:flex; flex-direction:column; gap:10px; }
 </style>
 </head>
 <body>
@@ -487,6 +519,7 @@ const html = `<!DOCTYPE html>
   <nav class="tab-nav">
     <button class="tab-btn active" onclick="switchTab('nc',this)">Natural Cycle</button>
     <button class="tab-btn" onclick="switchTab('conf',this)">Confluence Calendar</button>
+    <button class="tab-btn" onclick="switchTab('lb',this)">⭐ Long Best Names</button>
   </nav>
 </div>
 
@@ -610,6 +643,51 @@ const html = `<!DOCTYPE html>
   </div>
 </div>
 
+<!-- ══ TAB 3: Long Best Names ════════════════════════════ -->
+<div id="tab-lb" class="tab-content">
+  <div class="ctrl-row">
+    <div class="ctrl">
+      <label>Analysis Year</label>
+      <input type="number" id="lb-year" value="2026" min="2000" max="2050" oninput="lbRender()">
+    </div>
+    <div class="ctrl">
+      <label>ZigZag Deviation %</label>
+      <select id="lb-dev" onchange="invalidateCache(); lbRender()">
+        <option value="2">2%</option><option value="3">3%</option>
+        <option value="4" selected>4%</option><option value="5">5%</option>
+        <option value="7">7%</option><option value="10">10%</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label>Min Bars (Depth)</label>
+      <select id="lb-dep" onchange="invalidateCache(); lbRender()">
+        <option value="5">5</option><option value="8">8</option>
+        <option value="10" selected>10</option><option value="12">12</option>
+        <option value="15">15</option><option value="20">20</option>
+      </select>
+    </div>
+    <div class="summary-bar">
+      <div class="stat">Active signals <span id="lb-stat-signals">—</span></div>
+      <div class="stat">Upcoming dates <span id="lb-stat-upcoming">—</span></div>
+    </div>
+  </div>
+
+  <div class="lb-section-title">Full-Year Confluence Matrix — 15 Selected Stocks</div>
+  <div class="lb-wrap">
+    <table class="lb-table">
+      <thead><tr>
+        <th>Stock</th>
+        <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+        <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+      </tr></thead>
+      <tbody id="lb-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="lb-section-title">Upcoming Confluence Dates (from today)</div>
+  <div id="lb-upcoming"></div>
+</div>
+
 <script>
 // ════════════════════════════════════════════════════════
 // SHARED DATA & ENGINE
@@ -624,6 +702,24 @@ ${ohlcDataJS}
 const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const GAPS        = [20,15,13,12,10,6,5,4,3,2,1];
+
+const LONG_BEST = [
+  {sym:'ASIANPAINT', name:'Asian Paints'},
+  {sym:'HCLTECH',    name:'HCL Technologies'},
+  {sym:'HINDALCO',   name:'Hindalco'},
+  {sym:'TRENT',      name:'Trent'},
+  {sym:'LT',         name:'Larsen & Toubro'},
+  {sym:'ICICIBANK',  name:'ICICI Bank'},
+  {sym:'ADANIPORTS', name:'Adani Ports'},
+  {sym:'JSWSTEEL',   name:'JSW Steel'},
+  {sym:'SHRIRAMFIN', name:'Shriram Finance'},
+  {sym:'PERSISTENT', name:'Persistent Systems'},
+  {sym:'COFORGE',    name:'Coforge'},
+  {sym:'INDHOTEL',   name:'Indian Hotels'},
+  {sym:'SJVN',       name:'SJVN'},
+  {sym:'HUDCO',      name:'HUDCO'},
+  {sym:'RVNL',       name:'RVNL'},
+];
 
 // ── ZigZag engine ─────────────────────────────────────
 function computeZigZag(rows, dev, dep) {
@@ -870,7 +966,8 @@ function switchTab(id, btn) {
   document.getElementById('tab-'+id).classList.add('active');
   _activeTab = id;
   if (id==='nc') ncRender();
-  else cfRender();
+  else if (id==='conf') cfRender();
+  else if (id==='lb') lbRender();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1097,6 +1194,104 @@ function cfSetView(v,btn) {
   document.getElementById('dateView').style.display  = v==='date'?'flex':'none';
   document.getElementById('stockView').style.display = v==='stock'?'block':'none';
   cfRender();
+}
+
+// ════════════════════════════════════════════════════════
+// TAB 3 — Long Best Names
+// ════════════════════════════════════════════════════════
+function lbRender() {
+  const yr  = parseInt(document.getElementById('lb-year').value);
+  if (!yr||yr<2000||yr>2100) return;
+  const dev = parseFloat(document.getElementById('lb-dev').value);
+  const dep = parseInt(document.getElementById('lb-dep').value);
+  const today = new Date().toISOString().slice(0,10);
+
+  // Build full matrix: stock → month → confluence map
+  const matrix = LONG_BEST.map(({sym,name}) => ({
+    sym, name,
+    months: MONTHS.map((_,mi) => cfGetConfluence(sym,yr,mi,dev,dep))
+  }));
+
+  // Render matrix table
+  let totalSignals = 0;
+  document.getElementById('lb-tbody').innerHTML = matrix.map(({sym,name,months}) => {
+    const cells = months.map((conf,mi) => {
+      const entries = Object.entries(conf).sort((a,b)=>+a[0]-+b[0]);
+      if (!entries.length) return \`<td class="lb-cell empty">—</td>\`;
+      totalSignals += entries.length;
+      const badges = entries.map(([day,arr])=>{
+        const h=arr.some(e=>e.type==='H'), l=arr.some(e=>e.type==='L');
+        const cls=(h&&l)?'ev-hl':h?'ev-h':'ev-l';
+        const lbl=(h&&l)?\`\${day} H/L\`:h?\`\${day} H\`:\`\${day} L\`;
+        const tip=arr.map(e=>\`\${e.year}:\${e.type}\`).join(', ');
+        return \`<span class="ev \${cls}" title="\${tip}">⚡\${lbl} ×\${arr.length}</span>\`;
+      }).join('<br>');
+      return \`<td class="lb-cell has-conf">\${badges}</td>\`;
+    }).join('');
+    return \`<tr>
+      <td class="lb-sym-cell">
+        <div class="lb-sym">\${sym}</div>
+        <div class="lb-symname">\${name}</div>
+      </td>
+      \${cells}
+    </tr>\`;
+  }).join('');
+
+  // Upcoming confluence dates (from today onwards)
+  const upcoming = [];
+  matrix.forEach(({sym,name,months}) => {
+    months.forEach((conf,mi) => {
+      Object.entries(conf).sort((a,b)=>+a[0]-+b[0]).forEach(([day,arr]) => {
+        const dateStr = \`\${yr}-\${String(mi+1).padStart(2,'0')}-\${day}\`;
+        if (dateStr < today) return;
+        const h=arr.some(e=>e.type==='H'), l=arr.some(e=>e.type==='L');
+        upcoming.push({dateStr,mi,day,sym,name,arr,cfType:(h&&l)?'HL':h?'H':'L',count:arr.length});
+      });
+    });
+  });
+  upcoming.sort((a,b)=>a.dateStr.localeCompare(b.dateStr));
+
+  // Group by date
+  const byDate = {};
+  upcoming.forEach(u => { if(!byDate[u.dateStr]) byDate[u.dateStr]=[]; byDate[u.dateStr].push(u); });
+  const dateKeys = Object.keys(byDate).sort();
+
+  document.getElementById('lb-stat-signals').textContent = totalSignals;
+  document.getElementById('lb-stat-upcoming').textContent = dateKeys.length;
+
+  const upEl = document.getElementById('lb-upcoming');
+  if (!dateKeys.length) {
+    upEl.innerHTML = \`<div class="empty-state">No upcoming confluence signals for <strong>\${yr}</strong>.</div>\`;
+    return;
+  }
+  upEl.innerHTML = dateKeys.map(dateStr => {
+    const items = byDate[dateStr];
+    const d = new Date(dateStr+'T00:00:00');
+    const monthName = MONTHS[d.getMonth()];
+    const dayNum = String(d.getDate()).padStart(2,'0');
+    const isMulti = items.length >= 2;
+    const chips = items.sort((a,b)=>b.count-a.count).map(({sym,name,arr,cfType}) => {
+      const cls = cfType==='HL'?'hl':cfType==='H'?'h':'l';
+      const yrs = arr.map(e=>\`<span class="yr">\${e.year}:\${e.type}</span>\`).join('');
+      const chartBtn = \`<button class="chip-chart-btn" onclick="openChart('\${sym}','\${name.replace(/'/g,"\\\\'")}',\${dev},\${dep})" title="Open chart">📈</button>\`;
+      return \`<div class="stock-chip chip-\${cls}">
+        <div style="display:flex;align-items:center;justify-content:space-between">\${chartBtn}<div class="chip-sym \${cls}" style="flex:1">\${sym} <span class="chip-count \${cls}">×\${arr.length}</span></div></div>
+        <div class="chip-name">\${name}</div>
+        <div class="chip-meta">\${yrs}</div>
+      </div>\`;
+    }).join('');
+    return \`<div class="date-card">
+      <div class="date-header">
+        <div class="date-num">\${dayNum}</div>
+        <div>
+          <div style="color:var(--conf);font-weight:700">\${dayNum} \${monthName} \${yr}</div>
+          <div class="date-sublabel">\${items.length} stock\${items.length>1?'s':''} with Gann confluence</div>
+        </div>
+        <div class="stock-count-badge \${isMulti?'multi':''}">\${items.length} stock\${items.length>1?'s':''}</div>
+      </div>
+      <div class="stocks-grid">\${chips}</div>
+    </div>\`;
+  }).join('');
 }
 
 // ── Init ───────────────────────────────────────────────

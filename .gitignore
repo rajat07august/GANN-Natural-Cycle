@@ -13,3 +13,15 @@ Gann/6/confluence.html
 node_modules/
 
 .vercel
+
+# Kite API credentials (contains secrets)
+kite_config.json
+
+# Backtest output (regenerated on demand)
+backtest_results.csv
+backtest_results.html
+Backtest/*.csv
+Backtest/*.html
+
+# Kite intraday fetch script (local-only tool)
+fetch_intraday_kite.js

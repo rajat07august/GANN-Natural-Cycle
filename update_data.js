@@ -6,7 +6,8 @@
 //   1. Download any missing NSE bhavcopy files → nse-bhavdata/YYYY/
 //   2. Parse new bhavcopy rows, append to processed/SYMBOL.csv
 //   3. Re-fetch adjusted OHLC for all symbols from Yahoo Finance → processed_adj/
-//   4. Rebuild trial_natural_cycle.html + all ZigZag chart HTMLs
+//   4. Refresh 60-min intraday data from Kite API → processed_intraday/ (if token set)
+//   5. Rebuild trial_natural_cycle.html + all ZigZag chart HTMLs
 //
 // Usage:  node update_data.js
 //         node update_data.js --download-only
@@ -338,15 +339,35 @@ async function main() {
   }
 
   // ── STEP 3: Refresh adjusted OHLC from Yahoo Finance ──────
-  console.log('\n[3/4] Refreshing adjusted OHLC from Yahoo Finance...');
+  console.log('\n[3/5] Refreshing adjusted OHLC from Yahoo Finance...');
   try {
     execSync(`node "${path.join(GANN_DIR, 'fetch_adjusted.js')}"`, { stdio:'inherit' });
   } catch(e) {
     console.error('  ✗ fetch_adjusted.js failed:', e.stderr?.toString() || e.message);
   }
 
-  // ── STEP 4: Rebuild HTML files ─────────────────────────────
-  console.log('\n[4/4] Rebuilding HTML dashboards...');
+  // ── STEP 4: Refresh intraday 60-min data from Kite ─────────
+  const kiteCfg = path.join(GANN_DIR, 'kite_config.json');
+  if (fs.existsSync(kiteCfg)) {
+    const kc = JSON.parse(fs.readFileSync(kiteCfg,'utf8'));
+    if (kc.api_key && kc.access_token) {
+      console.log('\n[4/5] Refreshing 60-min intraday data from Kite...');
+      try {
+        execSync(`node "${path.join(GANN_DIR, 'fetch_intraday_kite.js')}"`, { stdio:'inherit' });
+      } catch(e) {
+        console.error('  ✗ fetch_intraday_kite.js failed:', e.stderr?.toString() || e.message);
+        console.error('  → If token expired: node fetch_intraday_kite.js --login');
+      }
+    } else {
+      console.log('\n[4/5] Kite token not set — skipping intraday update.');
+      console.log('  → Run: node fetch_intraday_kite.js --login');
+    }
+  } else {
+    console.log('\n[4/5] kite_config.json not found — skipping intraday update.');
+  }
+
+  // ── STEP 5: Rebuild HTML files ─────────────────────────────
+  console.log('\n[5/5] Rebuilding HTML dashboards...');
 
   try {
     console.log('  Building trial_natural_cycle.html...');
