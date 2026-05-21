@@ -208,6 +208,29 @@ function mergeRows(sym) {
   return cleanOHLC(rows.filter(r => r.date >= '2000-01-01').sort((a,b) => a.date.localeCompare(b.date)));
 }
 
+// ── Monthly Breakout symbols ──────────────────────────────────
+const MB_INSTRUMENTS = [
+  { sym:'HINDALCO',   name:'Hindalco Industries'     },
+  { sym:'GRASIM',     name:'Grasim Industries'        },
+  { sym:'SOLARINDS',  name:'Solar Industries'         },
+  { sym:'POWERINDIA', name:'Hitachi Energy India'     },
+  { sym:'IDEA',       name:'Vodafone Idea'            },
+  { sym:'MOTHERSON',  name:'Samvardhana Motherson'    },
+  { sym:'POLYCAB',    name:'Polycab India'            },
+  { sym:'APOLLOHOSP', name:'Apollo Hospitals'         },
+  { sym:'MAXHEALTH',  name:'Max Healthcare'           },
+  { sym:'MANKIND',    name:'Mankind Pharma'           },
+  { sym:'AUROPHARMA', name:'Aurobindo Pharma'         },
+  { sym:'MCX',        name:'MCX India'                },
+  { sym:'FORTIS',     name:'Fortis Healthcare'        },
+  { sym:'LAURUSLABS', name:'Laurus Labs'              },
+  { sym:'NAM-INDIA',  name:'Nippon Life India AMC'    },
+  { sym:'ANGELONE',   name:'Angel One'                },
+];
+
+// Symbols in MB_INSTRUMENTS that are NOT already in ALL_INSTRUMENTS
+const MB_ONLY_SYMS = new Set(['SOLARINDS','POWERINDIA','IDEA','MOTHERSON','MAXHEALTH','MANKIND','AUROPHARMA','FORTIS','LAURUSLABS','NAM-INDIA','ANGELONE']);
+
 // ── Build OHLC data ───────────────────────────────────────────
 const ALL_INSTRUMENTS = [...INSTRUMENTS, ...MIDCAP_INSTRUMENTS];
 console.error('Processing NIFTY50 stocks...');
@@ -219,10 +242,19 @@ for (const { sym, isIndex } of ALL_INSTRUMENTS) {
   ohlcBlocks[sym] = rows.map(r => `['${r.date}',${r.open.toFixed(2)},${r.high.toFixed(2)},${r.low.toFixed(2)},${r.close.toFixed(2)}]`).join(',');
 }
 
-const ohlcDataJS = ALL_INSTRUMENTS
-  .filter(i => !i.isIndex)
-  .map(({ sym }) => `  '${sym}':[${ohlcBlocks[sym]}]`)
-  .join(',\n');
+// Load OHLC for MB-only symbols
+console.error('Processing Monthly Breakout extra symbols...');
+for (const { sym } of MB_INSTRUMENTS) {
+  if (ohlcBlocks[sym]) continue; // already loaded
+  const rows = mergeRows(sym);
+  console.error(`  ${sym}: ${rows.length} rows (${rows[0]?.date} → ${rows[rows.length-1]?.date})`);
+  ohlcBlocks[sym] = rows.map(r => `['${r.date}',${r.open.toFixed(2)},${r.high.toFixed(2)},${r.low.toFixed(2)},${r.close.toFixed(2)}]`).join(',');
+}
+
+const ohlcDataJS = [
+  ...ALL_INSTRUMENTS.filter(i => !i.isIndex),
+  ...MB_INSTRUMENTS.filter(i => MB_ONLY_SYMS.has(i.sym)),
+].map(({ sym }) => `  '${sym}':[${ohlcBlocks[sym]}]`).join(',\n');
 
 // ── Selector options ──────────────────────────────────────────
 const instrOptionsNifty = INSTRUMENTS.map(({ sym, name }) =>
@@ -230,6 +262,10 @@ const instrOptionsNifty = INSTRUMENTS.map(({ sym, name }) =>
 ).join('\n        ');
 
 const instrOptionsMidcap = MIDCAP_INSTRUMENTS.map(({ sym, name }) =>
+  `<option value="${sym}">${name}</option>`
+).join('\n        ');
+
+const instrOptionsMB = MB_INSTRUMENTS.map(({ sym, name }) =>
   `<option value="${sym}">${name}</option>`
 ).join('\n        ');
 
@@ -387,6 +423,8 @@ const html = `<!DOCTYPE html>
   .vtbtn.active { background:var(--accent-dim2); color:var(--accent); font-weight:600; }
 
   #dateView { display:flex; flex-direction:column; gap:10px; }
+  #mb-dateView { display:flex; flex-direction:column; gap:10px; }
+  #mb-stockView { display:none; }
   .date-card { background:var(--panel); border:1px solid var(--border); border-radius:10px; overflow:hidden; transition:border-color .15s, box-shadow .15s; }
   .date-card:hover { border-color:#484f58; box-shadow:var(--shadow-md); }
   .date-header { display:flex; align-items:center; gap:14px; padding:12px 18px; background:var(--panel2); border-bottom:1px solid var(--border); }
@@ -515,11 +553,17 @@ const html = `<!DOCTYPE html>
       <span style="color:var(--text)">Midcap / Smallcap Stocks</span>
       <span style="background:#1a2a3a;border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:10px;color:var(--accent)">25 stocks</span>
     </label>
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;font-size:12px;color:var(--sub)">
+      <input type="checkbox" id="mb-toggle" onchange="toggleMB()" style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer">
+      <span style="color:var(--text)">Monthly Breakout Stocks</span>
+      <span style="background:#1a2a3a;border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:10px;color:var(--accent)">16 stocks</span>
+    </label>
   </div>
   <nav class="tab-nav">
     <button class="tab-btn active" onclick="switchTab('nc',this)">Natural Cycle</button>
     <button class="tab-btn" onclick="switchTab('conf',this)">Confluence Calendar</button>
     <button class="tab-btn" onclick="switchTab('lb',this)">⭐ Long Best Names</button>
+    <button class="tab-btn" onclick="switchTab('mb',this)">📊 Monthly Breakout</button>
   </nav>
 </div>
 
@@ -534,6 +578,9 @@ const html = `<!DOCTYPE html>
         </optgroup>
         <optgroup id="nc-mc-optgroup" label="Midcap / Smallcap" style="display:none">
         ${instrOptionsMidcap}
+        </optgroup>
+        <optgroup id="nc-mb-optgroup" label="Monthly Breakout" style="display:none">
+        ${instrOptionsMB}
         </optgroup>
       </select>
     </div>
@@ -643,6 +690,62 @@ const html = `<!DOCTYPE html>
   </div>
 </div>
 
+<!-- ══ TAB 4: Monthly Breakout ════════════════════════════ -->
+<div id="tab-mb" class="tab-content">
+  <div class="ctrl-row">
+    <div class="ctrl">
+      <label>Month</label>
+      <select id="mb-month" onchange="mbRender()">${monthOptions}</select>
+    </div>
+    <div class="ctrl">
+      <label>Analysis Year</label>
+      <select id="mb-year" onchange="mbRender()">${yearOptions}</select>
+    </div>
+    <div class="ctrl">
+      <label>ZigZag Deviation %</label>
+      <select id="mb-dev" onchange="invalidateCache(); mbRender()">
+        <option value="2">2%</option><option value="3">3%</option>
+        <option value="4" selected>4%</option><option value="5">5%</option>
+        <option value="7">7%</option><option value="10">10%</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label>Min Bars (Depth)</label>
+      <select id="mb-dep" onchange="invalidateCache(); mbRender()">
+        <option value="5">5</option><option value="8">8</option>
+        <option value="10" selected>10</option><option value="12">12</option>
+        <option value="15">15</option><option value="20">20</option>
+      </select>
+    </div>
+    <div class="summary-bar">
+      <div class="stat">Dates with signal <span id="mb-stat-dates">—</span></div>
+      <div class="stat">Stocks hit <span id="mb-stat-stocks">—</span></div>
+      <div class="stat">Multi-stock dates <span id="mb-stat-multi">—</span></div>
+    </div>
+  </div>
+
+  <div class="filter-strip">
+    <label>Min stocks per date:</label>
+    <button class="filter-btn active" onclick="mbSetMin(1,this)">Any (≥1)</button>
+    <button class="filter-btn" onclick="mbSetMin(2,this)">≥2 stocks</button>
+    <button class="filter-btn" onclick="mbSetMin(3,this)">≥3 stocks</button>
+    <button class="filter-btn" onclick="mbSetMin(4,this)">≥4 stocks</button>
+    <div class="fsep"></div>
+    <div class="view-toggle">
+      <button class="vtbtn active" onclick="mbSetView('date',this)">By Date</button>
+      <button class="vtbtn" onclick="mbSetView('stock',this)">By Stock</button>
+    </div>
+  </div>
+
+  <div id="mb-dateView"></div>
+  <div id="mb-stockView">
+    <table class="stock-table">
+      <thead><tr><th>Stock</th><th>Instrument</th><th>Confluence Dates</th><th>Lookback Years</th></tr></thead>
+      <tbody id="mb-stock-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
 <!-- ══ TAB 3: Long Best Names ════════════════════════════ -->
 <div id="tab-lb" class="tab-content">
   <div class="ctrl-row">
@@ -672,7 +775,7 @@ const html = `<!DOCTYPE html>
     </div>
   </div>
 
-  <div class="lb-section-title">Full-Year Confluence Matrix — 15 Selected Stocks</div>
+  <div class="lb-section-title" id="lb-matrix-title">Full-Year Confluence Matrix — 15 Selected Stocks</div>
   <div class="lb-wrap">
     <table class="lb-table">
       <thead><tr>
@@ -719,6 +822,25 @@ const LONG_BEST = [
   {sym:'SJVN',       name:'SJVN'},
   {sym:'HUDCO',      name:'HUDCO'},
   {sym:'RVNL',       name:'RVNL'},
+];
+
+const MONTHLY_BREAKOUT = [
+  {sym:'HINDALCO',   name:'Hindalco Industries'},
+  {sym:'GRASIM',     name:'Grasim Industries'},
+  {sym:'SOLARINDS',  name:'Solar Industries'},
+  {sym:'POWERINDIA', name:'Hitachi Energy India'},
+  {sym:'IDEA',       name:'Vodafone Idea'},
+  {sym:'MOTHERSON',  name:'Samvardhana Motherson'},
+  {sym:'POLYCAB',    name:'Polycab India'},
+  {sym:'APOLLOHOSP', name:'Apollo Hospitals'},
+  {sym:'MAXHEALTH',  name:'Max Healthcare'},
+  {sym:'MANKIND',    name:'Mankind Pharma'},
+  {sym:'AUROPHARMA', name:'Aurobindo Pharma'},
+  {sym:'MCX',        name:'MCX India'},
+  {sym:'FORTIS',     name:'Fortis Healthcare'},
+  {sym:'LAURUSLABS', name:'Laurus Labs'},
+  {sym:'NAM-INDIA',  name:'Nippon Life India AMC'},
+  {sym:'ANGELONE',   name:'Angel One'},
 ];
 
 // ── ZigZag engine ─────────────────────────────────────
@@ -834,7 +956,7 @@ function openChartFromNC() {
   const sym = document.getElementById('nc-instr').value;
   const dev = parseFloat(document.getElementById('nc-dev').value);
   const dep = parseInt(document.getElementById('nc-dep').value);
-  const instr = [...INSTRUMENTS, ...MIDCAP_INSTRUMENTS].find(i => i.sym === sym);
+  const instr = [...INSTRUMENTS, ...MIDCAP_INSTRUMENTS, ...MONTHLY_BREAKOUT].find(i => i.sym === sym);
   if (!instr || sym === 'NIFTY') { alert('No chart data for ' + sym); return; }
   openChart(sym, instr.name, dev, dep);
 }
@@ -939,8 +1061,12 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') closeChart(); 
 
 // ── Midcap toggle ──────────────────────────────────────
 function getActiveInstruments() {
-  const show = document.getElementById('midcap-toggle').checked;
-  return show ? [...INSTRUMENTS, ...MIDCAP_INSTRUMENTS] : INSTRUMENTS;
+  const showMC = document.getElementById('midcap-toggle').checked;
+  const showMB = document.getElementById('mb-toggle').checked;
+  const list = [...INSTRUMENTS];
+  if (showMC) list.push(...MIDCAP_INSTRUMENTS);
+  if (showMB) list.push(...MONTHLY_BREAKOUT.filter(i => !list.some(x => x.sym === i.sym)));
+  return list;
 }
 
 function toggleMidcap() {
@@ -957,6 +1083,20 @@ function toggleMidcap() {
   if (_activeTab === 'conf') cfRender();
 }
 
+function toggleMB() {
+  const show = document.getElementById('mb-toggle').checked;
+  const grp = document.getElementById('nc-mb-optgroup');
+  if (show) {
+    grp.style.display = '';
+  } else {
+    grp.style.display = 'none';
+    const sel = document.getElementById('nc-instr');
+    const isMB = MONTHLY_BREAKOUT.some(i => i.sym === sel.value);
+    if (isMB) { sel.value = 'NIFTY'; ncOnInstrChange(); }
+  }
+  if (_activeTab === 'conf') cfRender();
+}
+
 // ── Tab switching ──────────────────────────────────────
 let _activeTab = 'nc';
 function switchTab(id, btn) {
@@ -968,6 +1108,7 @@ function switchTab(id, btn) {
   if (id==='nc') ncRender();
   else if (id==='conf') cfRender();
   else if (id==='lb') lbRender();
+  else if (id==='mb') mbRender();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1205,6 +1346,8 @@ function lbRender() {
   const dev = parseFloat(document.getElementById('lb-dev').value);
   const dep = parseInt(document.getElementById('lb-dep').value);
   const today = new Date().toISOString().slice(0,10);
+  document.getElementById('lb-matrix-title').textContent =
+    \`Full-Year Confluence Matrix — 15 Selected Stocks · ZigZag \${dev}% / \${dep} bars\`;
 
   // Build full matrix: stock → month → confluence map
   const matrix = LONG_BEST.map(({sym,name}) => ({
@@ -1292,6 +1435,121 @@ function lbRender() {
       <div class="stocks-grid">\${chips}</div>
     </div>\`;
   }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// TAB 4 — Monthly Breakout
+// ════════════════════════════════════════════════════════
+let _mbMin  = 1;
+let _mbView = 'date';
+
+function mbRender() {
+  const monthIdx = parseInt(document.getElementById('mb-month').value);
+  const year     = parseInt(document.getElementById('mb-year').value);
+  const dev      = parseFloat(document.getElementById('mb-dev').value);
+  const dep      = parseInt(document.getElementById('mb-dep').value);
+
+  const dateMap={}, stockConf={};
+  const stocksWithSignal=new Set();
+
+  MONTHLY_BREAKOUT.forEach(({sym,name}) => {
+    const conf=cfGetConfluence(sym,year,monthIdx,dev,dep);
+    if (!Object.keys(conf).length) return;
+    stockConf[sym]={name,conf};
+    stocksWithSignal.add(sym);
+    for (const [day,arr] of Object.entries(conf)) {
+      if (!dateMap[day]) dateMap[day]=[];
+      dateMap[day].push({sym,name,arr});
+    }
+  });
+
+  const sortedDays=Object.keys(dateMap).sort();
+  const multiDays=sortedDays.filter(d=>dateMap[d].length>=2);
+
+  document.getElementById('mb-stat-dates').textContent  = sortedDays.length;
+  document.getElementById('mb-stat-stocks').textContent = stocksWithSignal.size;
+  document.getElementById('mb-stat-multi').textContent  = multiDays.length;
+
+  const filtered = sortedDays.filter(d=>dateMap[d].length>=_mbMin);
+
+  if (_mbView==='date') mbRenderDate(filtered, dateMap, monthIdx, year, dev, dep);
+  else mbRenderStock(stockConf, monthIdx, year);
+}
+
+function mbRenderDate(days, dateMap, monthIdx, year, dev, dep) {
+  const el=document.getElementById('mb-dateView');
+  const monthName=MONTHS_LONG[monthIdx];
+  if (!days.length) {
+    el.innerHTML=\`<div class="empty-state">No confluence dates for <strong>\${monthName} \${year}</strong> with current filters.</div>\`;
+    return;
+  }
+  el.innerHTML=days.map(day=>{
+    const stocks=dateMap[day];
+    const isMulti=stocks.length>=2;
+    const chips=stocks.sort((a,b)=>b.arr.length-a.arr.length).map(({sym,name,arr})=>{
+      const cls=cfChipCls(arr);
+      const yrs=arr.map(e=>\`<span class="yr">\${e.year}:\${e.type}</span>\`).join('');
+      const chartBtn=\`<button class="chip-chart-btn" onclick="openChart('\${sym}','\${name.replace(/'/g,"\\\\'")}',\${dev},\${dep})" title="Open chart">📈</button>\`;
+      return\`<div class="stock-chip chip-\${cls}">
+        <div style="display:flex;align-items:center;justify-content:space-between">\${chartBtn}<div class="chip-sym \${cls}" style="flex:1">\${sym} <span class="chip-count \${cls}">×\${arr.length}</span></div></div>
+        <div class="chip-name">\${name}</div>
+        <div class="chip-meta">\${yrs}</div>
+      </div>\`;
+    }).join('');
+    return\`<div class="date-card">
+      <div class="date-header">
+        <div class="date-num">\${day}</div>
+        <div>
+          <div style="color:var(--conf);font-weight:700">\${day} \${monthName} \${year}</div>
+          <div class="date-sublabel">\${stocks.length} stock\${stocks.length>1?'s':''} with Gann confluence</div>
+        </div>
+        <div class="stock-count-badge \${isMulti?'multi':''}">\${stocks.length} stock\${stocks.length>1?'s':''}</div>
+      </div>
+      <div class="stocks-grid">\${chips}</div>
+    </div>\`;
+  }).join('');
+}
+
+function mbRenderStock(stockConf, monthIdx, year) {
+  const tbody=document.getElementById('mb-stock-tbody');
+  const monthName=MONTHS_LONG[monthIdx];
+  if (!Object.keys(stockConf).length) {
+    tbody.innerHTML=\`<tr><td colspan="4" class="empty-state">No confluence dates for \${monthName} \${year}.</td></tr>\`;
+    return;
+  }
+  tbody.innerHTML=MONTHLY_BREAKOUT.map(({sym,name}) => {
+    const sc=stockConf[sym];
+    if (!sc) {
+      if (_mbMin>1) return '';
+      return\`<tr><td>\${sym}</td><td style="color:var(--sub);font-size:11px">\${name}</td><td colspan="2" class="no-conf">—</td></tr>\`;
+    }
+    const days=Object.keys(sc.conf).sort();
+    const badges=days.map(day=>{
+      const arr=sc.conf[day];
+      const h=arr.some(e=>e.type==='H'), l=arr.some(e=>e.type==='L');
+      const cls=(h&&l)?'ev-hl':h?'ev-h':'ev-l';
+      const lbl=day+' '+((h&&l)?'H/L':h?'H':'L');
+      const tip=arr.map(e=>\`\${e.year}:\${e.type}\`).join(', ');
+      return\`<span class="ev \${cls}" title="\${tip}">⚡ \${lbl} ×\${arr.length}</span>\`;
+    }).join(' ');
+    const yrs=[...new Set(days.flatMap(d=>sc.conf[d].map(e=>e.year)))].sort().join(', ');
+    return\`<tr><td>\${sym}</td><td style="color:var(--sub);font-size:11px">\${name}</td><td>\${badges}</td><td style="color:var(--sub);font-size:11px">\${yrs}</td></tr>\`;
+  }).filter(Boolean).join('');
+}
+
+function mbSetMin(n,btn) {
+  _mbMin=n;
+  document.querySelectorAll('#tab-mb .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  mbRender();
+}
+function mbSetView(v,btn) {
+  _mbView=v;
+  document.querySelectorAll('#tab-mb .vtbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mb-dateView').style.display  = v==='date'?'flex':'none';
+  document.getElementById('mb-stockView').style.display = v==='stock'?'block':'none';
+  mbRender();
 }
 
 // ── Init ───────────────────────────────────────────────

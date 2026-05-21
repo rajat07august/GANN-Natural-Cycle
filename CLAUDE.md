@@ -80,6 +80,46 @@ Same calendar day appearing in ≥2 of the 11 lookback years in the same month =
 - OHLC_DATA keys with special chars (M&M, BAJAJ-AUTO) must be quoted: `'${sym}':` not `${sym}:`.
 - Confluence grouping: group by day-only, not day+type (H and L on same date = one signal).
 
+## Backtest Scripts (Backtest/ folder — outputs excluded from git)
+
+### Long-Side Systems
+- `backtest_low_entry.js` — System 1 (Low Entry Long): entry at confLow, SL below confLow, BE ratchet at confHigh.
+- `backtest_long_refined.js` — System 2 (Breakout Long): entry above confHigh, SL at confLow, ratchets at 1R/2R/3R.
+- `backtest_combined.js` — Both long systems in one tabbed HTML. Auto-selects top 15 by Calmar r2 (≥5 trades).
+  - System 1 top 15: MFSL, TATACONSUM, ULTRACEMCO, ASIANPAINT, FEDERALBNK, SUNPHARMA, GRASIM, HCLTECH, INDUSINDBK, TITAN, INDHOTEL, EICHERMOT, HINDALCO, TCS, MARUTI
+  - System 2 top 15: BRITANNIA, BAJAJFINSV, LT, TRENT, POONAWALLA, MARUTI, LTTS, EICHERMOT, APOLLOHOSP, INDHOTEL, ICICIBANK, M&M, SJVN, AXISBANK, SHRIRAMFIN
+- `backtest_sweep_devdep.js` — Sweeps Dev% ∈ {3,4,5,7,10} × Depth ∈ {5,10,15}. Finding: EV stable (~1.0R for 2R exit, ~1.64R for 5R) across all ZigZag params — edge comes from confluence quality, not ZigZag sensitivity.
+
+### Short-Side Systems (`backtest_short_all.js`)
+Runs all 4 short setups in one script → `backtest_short_all.html` (tabbed, with Compare tab).
+Signal for all: Gann Confluence date (cfCount ≥ 2, signal type ignored).
+Common ratchet (inverted for short): LOW ≤ ep−1R → BE; LOW ≤ ep−2R → lock 1.5R; LOW ≤ ep−3R → lock 2R (r3).
+SL trigger: candle HIGH ≥ currentSL.
+
+| Setup | Entry | SL | Risk | EV r2 | Calmar |
+|-------|-------|----|------|-------|--------|
+| **A — Rejection** | Next-day candle HIGH ≥ confHigh AND CLOSE < confHigh | Rejection candle HIGH | high − close | −0.57R | −1.0 |
+| **B — Breakdown** | Next-day first CLOSE < confLow | confHigh | confHigh − ep | −0.33R | −0.95 |
+| **C — Trend+Breakdown** | Same as B, only when last ZigZag H < previous H (Lower High = downtrend) | confHigh | confHigh − ep | −0.30R | −0.90 |
+| **D — Fade High** ✓ | Next-day first CLOSE > confHigh (fade the breakout above resistance) | Entry candle HIGH | high − close | **+0.98R** | **299** |
+
+**Key finding:** Only Setup D has positive edge. A/B/C all negative — Gann confluence zones act as support, not resistance, so shorting into/below them fails. Fading false breakouts ABOVE confHigh (Setup D) works because the wick high provides a tight SL with high R/R.
+
+Setup D Top 15 (Calmar r2, ≥5 trades): HINDUNILVR, ASIANPAINT, AXISBANK, APOLLOHOSP, SBIN, MARUTI, FEDERALBNK, EICHERMOT, M&M, TITAN, LT, INFY, HCLTECH, NTPC, TRENT
+
+### Backtest Common Parameters
+- ZigZag: Dev 4%, Depth 10 (adjusted daily prices)
+- Portfolio: ₹10L initial capital, ₹16K fixed risk/trade, max 5 concurrent positions, FIFO flush
+- Analysis years: 2020–2026. Live trades (refDate ≥ today) excluded from stats.
+- Top 15 selection: sort by Calmar r2 descending, filter ≥5 closed trades, take top 15.
+- rMult for shorts: (ep − exitPrice) / risk  (positive when price falls)
+- Intraday data: `processed_intraday/${sym}_60min.csv`, column-index parsing (c[1]=date, c[2]=time, c[3-6]=OHLC)
+
+### Trade Example (verified)
+JSWSTEEL 2022-05-04 confluence (HL, count=2): confLow=708.05, confHigh=736.
+Setup B: SHORT entered 2022-05-05 14:15 at 707.4 (SL=736, risk=28.6).
+BE ratchet May-09, 1.5R lock May-10, 2R lock May-12. r1=+1R, r2=+1.5R, r3=+2R.
+
 ## Deferred
 - Dynamic Cycle tab — explicitly deferred, will be worked on later.
 - BANKNIFTY_F, FINNIFTY instruments — skipped for now.
@@ -89,3 +129,4 @@ Same calendar day appearing in ≥2 of the 11 lookback years in the same month =
 Repository: https://github.com/rajat07august/GANN-Natural-Cycle.git
 Branch: master
 Excluded from repo: Gann/1–5 (raw Excel, 500MB+), Gann/6/1 (source Excel), Gann/6/confluence.html (superseded)
+Backtest outputs (*.html, *.csv) excluded via .gitignore — only JS source files committed.
