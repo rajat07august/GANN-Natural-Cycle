@@ -3,34 +3,8 @@
 // Shared: NIFTY_F, OHLC_DATA, ZigZag engine, cache
 // node build_trial.js
 
-const fs     = require('fs');
-const path   = require('path');
-const { execSync } = require('child_process');
-
-// ── Parquet reader (via Python temp script) ──────────────────
-const PARQUET_DIR = 'J:/Winning Characteristics/Final Data';
-const TMP_PY = path.join(require('os').tmpdir(), '_gann_parquet_reader.py');
-
-function readParquet(sym) {
-  const fpath = path.join(PARQUET_DIR, `${sym}.parquet`).replace(/\\/g, '/');
-  const script = [
-    'import pandas as pd, json',
-    `df = pd.read_parquet(r'${fpath}')`,
-    `df = df[df['volume'] > 0]`,
-    `df = df[df['date'] >= '2000-01-01']`,
-    `df = df.sort_values('date')`,
-    `rows = df[['date','open','high','low','close']].values.tolist()`,
-    `print(json.dumps([[str(r[0]),round(float(r[1]),2),round(float(r[2]),2),round(float(r[3]),2),round(float(r[4]),2)] for r in rows]))`,
-  ].join('\n');
-  fs.writeFileSync(TMP_PY, script, 'utf8');
-  try {
-    const out = execSync(`py -3 "${TMP_PY}"`, { maxBuffer: 50 * 1024 * 1024 });
-    return JSON.parse(out.toString());
-  } catch (e) {
-    console.error(`  WARNING: could not read parquet for ${sym}: ${e.message.slice(0,100)}`);
-    return [];
-  }
-}
+const fs   = require('fs');
+const path = require('path');
 
 // ── Name mapping ──────────────────────────────────────────────
 const HIST_NAMES = {
@@ -127,184 +101,6 @@ const MIDCAP_INSTRUMENTS = [
   { sym:'COCHINSHIP',  name:'Cochin Shipyard'              },
   { sym:'MAZDOCK',     name:'Mazagon Dock'                 },
 ];
-
-// ── Swing HIGH RS symbols (Blue list + Execution, NSE only, flat) ────────────
-const SRS_INSTRUMENTS = [
-  // ── Blue list ────────────────────────────────────────────────
-  { sym:'AADHARHFC',  name:'Aadhar Housing Finance'     },
-  { sym:'AETHER',     name:'Aether Industries'           },
-  { sym:'AEROFLEX',   name:'Aeroflex Industries'         },
-  { sym:'ADANIENSOL', name:'Adani Energy Solutions'      },
-  { sym:'ADANIPOWER', name:'Adani Power'                 },
-  { sym:'AIMTRON',    name:'Aimtron Electronics'         },
-  { sym:'APLAPOLLO',  name:'APL Apollo Tubes'            },
-  { sym:'APOLLO',     name:'Apollo Micro Systems'        },
-  { sym:'ARIES',      name:'Aries Agro'                  },
-  { sym:'ARSSBL',     name:'ARS Steels & Alloy Intl'    },
-  { sym:'ARVIND',     name:'Arvind Ltd'                  },
-  { sym:'ASKAUTOLTD', name:'ASK Automotive'              },
-  { sym:'ASTERDM',    name:'Aster DM Healthcare'         },
-  { sym:'ATALREAL',   name:'Atal Realtech'               },
-  { sym:'ATGL',       name:'Adani Total Gas'             },
-  { sym:'BANCOINDIA', name:'Banco Products'              },
-  { sym:'BBOX',       name:'Black Box Ltd'               },
-  { sym:'BELRISE',    name:'Belrise Industries'          },
-  { sym:'BLACKBUCK',  name:'Zinka Logistics (BlackBuck)' },
-  { sym:'CANHLIFE',   name:'Canara HSBC Life Insurance'  },
-  { sym:'CARRARO',    name:'Carraro India'               },
-  { sym:'CCL',        name:'CCL Products'                },
-  { sym:'CENTUM',     name:'Centum Electronics'          },
-  { sym:'CPPLUS',     name:'CP Plus (Aditya Infotech)'   },
-  { sym:'CUMMINSIND', name:'Cummins India'               },
-  { sym:'CUPID',      name:'Cupid Ltd'                   },
-  { sym:'DREDGECORP', name:'Dredging Corporation'        },
-  { sym:'DSSL',       name:'Dynacons Systems'            },
-  { sym:'DYNAMATECH', name:'Dynamatic Technologies'      },
-  { sym:'EMCURE',     name:'Emcure Pharmaceuticals'      },
-  { sym:'ENDURANCE',  name:'Endurance Technologies'      },
-  { sym:'ESABINDIA',  name:'Esab India'                  },
-  { sym:'FEDERALBNK', name:'Federal Bank'                },
-  { sym:'FIEMIND',    name:'Fiem Industries'             },
-  { sym:'FRACTAL',    name:'Fractal Analytics'           },
-  { sym:'GENUSPOWER', name:'Genus Power'                 },
-  { sym:'GICRE',      name:'GIC Re'                      },
-  { sym:'GLAND',      name:'Gland Pharma'                },
-  { sym:'GLENMARK',   name:'Glenmark Pharma'             },
-  { sym:'GMBREW',     name:'GM Breweries'                },
-  { sym:'GODAVARIB',  name:'Godavari Biorefineries'      },
-  { sym:'GOKULAGRO',  name:'Gokul Agro Resources'        },
-  { sym:'GRASIM',     name:'Grasim Industries'           },
-  { sym:'GRMOVER',    name:'GRM Overseas'                },
-  { sym:'GUJALKALI',  name:'Gujarat Alkalies'            },
-  { sym:'HEG',        name:'HEG Ltd'                     },
-  { sym:'HIRECT',     name:'Hi-Tech Pipes'               },
-  { sym:'IMFA',       name:'Indian Metals & Ferro Alloys'},
-  { sym:'INDIAGLYCO', name:'India Glycols'               },
-  { sym:'IPCALAB',    name:'Ipca Laboratories'           },
-  { sym:'JAMNAAUTO',  name:'Jamna Auto Industries'       },
-  { sym:'JSLL',       name:'Jain Irrigation Systems'     },
-  { sym:'KERNEX',     name:'Kernex Microsystems'         },
-  { sym:'KIRLPNU',    name:'Kirloskar Pneumatic'         },
-  { sym:'KPIGREEN',   name:'KPI Green Energy'            },
-  { sym:'KTKBANK',    name:'Karnataka Bank'              },
-  { sym:'KRN',        name:'KRN Heat Exchanger'          },
-  { sym:'LINDEINDIA', name:'Linde India'                 },
-  { sym:'LLOYDSME',   name:'Lloyds Metals & Energy'      },
-  { sym:'MANINDS',    name:'Man Industries'              },
-  { sym:'MANORAMA',   name:'Manorama Industries'         },
-  { sym:'MAYURUNIQ',  name:'Mayur Uniquoters'            },
-  { sym:'MBAPL',      name:'Meghmani Organics'           },
-  { sym:'NGLFINE',    name:'NGL Fine-Chem'               },
-  { sym:'OLECTRA',    name:'Olectra Greentech'           },
-  { sym:'ONESOURCE',  name:'OneSource Specialty Pharma'  },
-  { sym:'PFOCUS',     name:'Prime Focus'                 },
-  { sym:'POWERINDIA', name:'Hitachi Energy India'        },
-  { sym:'PRECWIRE',   name:'Precision Wires'             },
-  { sym:'PRIVISCL',   name:'Privi Speciality Chemicals'  },
-  { sym:'PSPPROJECT', name:'PSP Projects'                },
-  { sym:'ROSSTECH',   name:'Ross Tech'                   },
-  { sym:'SAILIFE',    name:'SAI Life Sciences'           },
-  { sym:'SANDUMA',    name:'Sandur Manganese'            },
-  { sym:'SCHNEIDER',  name:'Schneider Electric Infra'    },
-  { sym:'SENORES',    name:'Senores Pharmaceuticals'     },
-  { sym:'SHAILY',     name:'Shaily Engineering Plastics' },
-  { sym:'SHARDACROP', name:'Sharda Cropchem'             },
-  { sym:'SHILCTECH',  name:'Shilchar Technologies'       },
-  { sym:'SMSPHARMA',  name:'SMS Pharmaceuticals'         },
-  { sym:'SOUTHWEST',  name:'South West Pinnacle Exp'     },
-  { sym:'STAR',       name:'Star Health Insurance'       },
-  { sym:'STARHEALTH', name:'Star Health Insurance'       },
-  { sym:'SUZLON',     name:'Suzlon Energy'               },
-  { sym:'TDPOWERSYS', name:'TD Power Systems'            },
-  { sym:'TECHNOE',    name:'Techno Electric & Engg'      },
-  { sym:'THERMAX',    name:'Thermax'                     },
-  { sym:'THYROCARE',  name:'Thyrocare Technologies'      },
-  { sym:'TI',         name:'Tube Investments of India'   },
-  { sym:'TUNWAL',     name:'Tunwal E-Motors'             },
-  { sym:'TVSHLTD',    name:'TVS Holdings'                },
-  { sym:'UJJIVANSFB', name:'Ujjivan Small Finance Bank'  },
-  { sym:'UTLSOLAR',   name:'UTL Solar'                   },
-  { sym:'VIDYAWIRES', name:'Vidya Wires'                 },
-  { sym:'VIVIANA',    name:'Viviana Power Tech'          },
-  { sym:'VTL',        name:'Vardhman Textiles'           },
-  { sym:'WAAREEENER', name:'Waaree Energies'             },
-  { sym:'WOCKPHARMA', name:'Wockhardt'                   },
-  { sym:'YATHARTH',   name:'Yatharth Hospital'           },
-  { sym:'ZFCVINDIA',  name:'ZF Commercial Vehicle'       },
-  { sym:'ZYDUSWELL',  name:'Zydus Wellness'              },
-  // ── Execution list ───────────────────────────────────────────
-  { sym:'ABSLAMC',    name:'Aditya Birla Sun Life AMC'   },
-  { sym:'ADANIENT',   name:'Adani Enterprises'           },
-  { sym:'ANGELONE',   name:'Angel One'                   },
-  { sym:'ANURAS',     name:'Anuras Tech'                 },
-  { sym:'ASTRAMICRO', name:'Astra Microwave Products'    },
-  { sym:'ATLANTAELE', name:'Atlanta Electronics'         },
-  { sym:'ATHERENERG', name:'Athar Energy'                },
-  { sym:'AVALON',     name:'Avalon Technologies'         },
-  { sym:'AYE',        name:'Aye Finance'                 },
-  { sym:'AXISCADES',  name:'Axiscades Technologies'      },
-  { sym:'AZAD',       name:'Azad Engineering'            },
-  { sym:'BAJAJCON',   name:'Bajaj Consumer Care'         },
-  { sym:'BHEL',       name:'Bharat Heavy Electricals'    },
-  { sym:'BLISSGVS',   name:'Bliss GVS Pharma'           },
-  { sym:'BSE',        name:'BSE Ltd'                     },
-  { sym:'CARERATING', name:'CARE Ratings'                },
-  { sym:'CARYSIL',    name:'Carysil'                     },
-  { sym:'CEMPRO',     name:'Cement Products'             },
-  { sym:'CHENNPETRO', name:'Chennai Petroleum'           },
-  { sym:'DATAPATTNS', name:'Data Patterns'               },
-  { sym:'DEEPAKFERT', name:'Deepak Fertilisers'          },
-  { sym:'DEEDEV',     name:'Dee Development Engineers'   },
-  { sym:'DIACABS',    name:'Diamond Cables'              },
-  { sym:'DRREDDY',    name:"Dr. Reddy's Laboratories"    },
-  { sym:'EMMVEE',     name:'Emmvee Photovoltaic Power'   },
-  { sym:'ENRIN',      name:'Enrin Energy'                },
-  { sym:'ETERNAL',    name:'Eternal Ltd (Zomato)'        },
-  { sym:'FCL',        name:'Fineotex Chemical'           },
-  { sym:'GESHIP',     name:'Great Eastern Shipping'      },
-  { sym:'GMDCLTD',    name:'GMDC'                        },
-  { sym:'GOODLUCK',   name:'Good Luck India'             },
-  { sym:'GPIL',       name:'Godawari Power & Ispat'      },
-  { sym:'GRANULES',   name:'Granules India'              },
-  { sym:'GRAPHITE',   name:'Graphite India'              },
-  { sym:'GRWRHITECH', name:'Grauer & Weil (India)'       },
-  { sym:'HFCL',       name:'HFCL Ltd'                    },
-  { sym:'IFCI',       name:'IFCI Ltd'                    },
-  { sym:'JAYNECOIND', name:'Jay NE Co Industries'        },
-  { sym:'KIRLOSENG',  name:'Kirloskar Oil Engines'       },
-  { sym:'KMEW',       name:'K & M Engineering'           },
-  { sym:'KRISHANA',   name:'Krishana Phoschem'           },
-  { sym:'KSL',        name:'KSL and Industries'          },
-  { sym:'LLOYDSENT',  name:'Lloyds Enterprises'          },
-  { sym:'LUMAXTECH',  name:'Lumax Technologies'          },
-  { sym:'MARINE',     name:'Marine Electricals'          },
-  { sym:'MTARTECH',   name:'MTAR Technologies'           },
-  { sym:'NATIONALUM', name:'National Aluminium'          },
-  { sym:'NETWEB',     name:'Netweb Technologies'         },
-  { sym:'NLCINDIA',   name:'NLC India'                   },
-  { sym:'NTPC',       name:'NTPC'                        },
-  { sym:'PAISALO',    name:'Paisalo Digital'             },
-  { sym:'POCL',       name:'Pocl Enterprises'            },
-  { sym:'PREMEXPLN',  name:'Premier Explosives'          },
-  { sym:'RRKABEL',    name:'RR Kabel'                    },
-  { sym:'SANSERA',    name:'Sansera Engineering'         },
-  { sym:'SCI',        name:'Shipping Corporation of India'},
-  { sym:'SEAMECLTD',  name:'Seamec Ltd'                  },
-  { sym:'SEDEMAC',    name:'Sedemac Mechatronics'        },
-  { sym:'SHILPAMED',  name:'Shilpa Medicare'             },
-  { sym:'SHRIPISTON', name:'Shriram Pistons & Rings'     },
-  { sym:'SJS',        name:'SJS Enterprises'             },
-  { sym:'SPORTKING',  name:'Sportking India'             },
-  { sym:'STLTECH',    name:'Sterlite Technologies'       },
-  { sym:'SYRMA',      name:'Syrma SGS Technology'        },
-  { sym:'TMB',        name:'Tamilnad Mercantile Bank'    },
-  { sym:'UNIVCABLES', name:'Universal Cables'            },
-  { sym:'VISHNU',     name:'Vishnu Chemicals'            },
-  { sym:'VTL',        name:'Vardhman Textiles'           },
-  { sym:'WHEELS',     name:'Wheels India'                },
-  { sym:'ZENTEC',     name:'Zen Technologies'            },
-  { sym:'NETWEB',     name:'Netweb Technologies'         },
-].filter((v,i,a) => a.findIndex(x=>x.sym===v.sym)===i); // deduplicate by sym
 
 // ── CSV helpers ───────────────────────────────────────────────
 function parseCSV(text) {
@@ -449,50 +245,16 @@ for (const { sym, isIndex } of ALL_INSTRUMENTS) {
 // Load OHLC for MB-only symbols
 console.error('Processing Monthly Breakout extra symbols...');
 for (const { sym } of MB_INSTRUMENTS) {
-  if (ohlcBlocks[sym]) continue;
+  if (ohlcBlocks[sym]) continue; // already loaded
   const rows = mergeRows(sym);
   console.error(`  ${sym}: ${rows.length} rows (${rows[0]?.date} → ${rows[rows.length-1]?.date})`);
   ohlcBlocks[sym] = rows.map(r => `['${r.date}',${r.open.toFixed(2)},${r.high.toFixed(2)},${r.low.toFixed(2)},${r.close.toFixed(2)}]`).join(',');
 }
 
-// Load OHLC for Swing HIGH RS symbols (from parquet)
-console.error('Processing Swing HIGH RS symbols (parquet)...');
-const SRS_ONLY = SRS_INSTRUMENTS.filter(i => !ohlcBlocks[i.sym]);
-for (const { sym } of SRS_ONLY) {
-  const raw = readParquet(sym);
-  if (!raw.length) { ohlcBlocks[sym] = ''; continue; }
-  console.error(`  ${sym}: ${raw.length} rows (${raw[0][0]} → ${raw[raw.length-1][0]})`);
-  ohlcBlocks[sym] = raw.map(r => `['${r[0]}',${(+r[1]).toFixed(2)},${(+r[2]).toFixed(2)},${(+r[3]).toFixed(2)},${(+r[4]).toFixed(2)}]`).join(',');
-}
-
-// ── Main OHLC (NIFTY50 + Midcap + MB) stays inside HTML ──────
-const seenOhlc = new Set();
-const ohlcSymList = [];
-for (const arr of [ALL_INSTRUMENTS, MB_INSTRUMENTS]) {
-  for (const { sym, isIndex } of arr) {
-    if (isIndex || seenOhlc.has(sym)) continue;
-    if (ohlcBlocks[sym] === undefined) continue;
-    seenOhlc.add(sym);
-    ohlcSymList.push(sym);
-  }
-}
-const ohlcDataJS = ohlcSymList.map(sym => `  '${sym}':[${ohlcBlocks[sym] || ''}]`).join(',\n');
-
-// ── SRS OHLC → two sidecar JS files (each <25 MB) ─────────────
-const srsOnlySyms = SRS_INSTRUMENTS
-  .filter(i => !seenOhlc.has(i.sym) && ohlcBlocks[i.sym] !== undefined)
-  .filter((v,i,a) => a.findIndex(x=>x.sym===v.sym)===i);
-
-const srsLines = srsOnlySyms.map(({ sym }) => `  '${sym}':[${ohlcBlocks[sym] || ''}]`);
-const mid = Math.ceil(srsLines.length / 2);
-const srsFileA = `window.SRS_OHLC={\n${srsLines.slice(0,mid).join(',\n')}\n};`;
-const srsFileB = `Object.assign(window.SRS_OHLC,{\n${srsLines.slice(mid).join(',\n')}\n});`;
-
-fs.writeFileSync('j:/GANN Claude/Gann/6/srs_ohlc_a.js', srsFileA, 'utf8');
-fs.writeFileSync('j:/GANN Claude/Gann/6/srs_ohlc_b.js', srsFileB, 'utf8');
-const srsAkb = (fs.statSync('j:/GANN Claude/Gann/6/srs_ohlc_a.js').size/1024).toFixed(0);
-const srsBkb = (fs.statSync('j:/GANN Claude/Gann/6/srs_ohlc_b.js').size/1024).toFixed(0);
-console.error(`  srs_ohlc_a.js: ${srsAkb} KB  |  srs_ohlc_b.js: ${srsBkb} KB`);
+const ohlcDataJS = [
+  ...ALL_INSTRUMENTS.filter(i => !i.isIndex),
+  ...MB_INSTRUMENTS.filter(i => MB_ONLY_SYMS.has(i.sym)),
+].map(({ sym }) => `  '${sym}':[${ohlcBlocks[sym]}]`).join(',\n');
 
 // ── Selector options ──────────────────────────────────────────
 const instrOptionsNifty = INSTRUMENTS.map(({ sym, name }) =>
@@ -663,8 +425,6 @@ const html = `<!DOCTYPE html>
   #dateView { display:flex; flex-direction:column; gap:10px; }
   #mb-dateView { display:flex; flex-direction:column; gap:10px; }
   #mb-stockView { display:none; }
-  #srs-dateView { display:flex; flex-direction:column; gap:10px; }
-  #srs-stockView { display:none; }
   .date-card { background:var(--panel); border:1px solid var(--border); border-radius:10px; overflow:hidden; transition:border-color .15s, box-shadow .15s; }
   .date-card:hover { border-color:#484f58; box-shadow:var(--shadow-md); }
   .date-header { display:flex; align-items:center; gap:14px; padding:12px 18px; background:var(--panel2); border-bottom:1px solid var(--border); }
@@ -743,8 +503,6 @@ const html = `<!DOCTYPE html>
   .lb-cell.has-conf { background:rgba(255,224,102,.03); }
   #lb-upcoming { display:flex; flex-direction:column; gap:10px; }
 </style>
-<script src="srs_ohlc_a.js"></script>
-<script src="srs_ohlc_b.js"></script>
 </head>
 <body>
 
@@ -806,7 +564,6 @@ const html = `<!DOCTYPE html>
     <button class="tab-btn" onclick="switchTab('conf',this)">Confluence Calendar</button>
     <button class="tab-btn" onclick="switchTab('lb',this)">⭐ Long Best Names</button>
     <button class="tab-btn" onclick="switchTab('mb',this)">📊 Monthly Breakout</button>
-    <button class="tab-btn" onclick="switchTab('srs',this)">🚀 Swing HIGH RS</button>
   </nav>
 </div>
 
@@ -929,62 +686,6 @@ const html = `<!DOCTYPE html>
     <table class="stock-table">
       <thead><tr><th>Stock</th><th>Instrument</th><th>Confluence Dates</th><th>Lookback Years</th></tr></thead>
       <tbody id="cf-stock-tbody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ══ TAB 5: Swing HIGH RS ════════════════════════════════ -->
-<div id="tab-srs" class="tab-content">
-  <div class="ctrl-row">
-    <div class="ctrl">
-      <label>Month</label>
-      <select id="srs-month" onchange="srsRender()">${monthOptions}</select>
-    </div>
-    <div class="ctrl">
-      <label>Analysis Year</label>
-      <select id="srs-year" onchange="srsRender()">${yearOptions}</select>
-    </div>
-    <div class="ctrl">
-      <label>ZigZag Deviation %</label>
-      <select id="srs-dev" onchange="invalidateCache(); srsRender()">
-        <option value="2">2%</option><option value="3">3%</option>
-        <option value="4" selected>4%</option><option value="5">5%</option>
-        <option value="7">7%</option><option value="10">10%</option>
-      </select>
-    </div>
-    <div class="ctrl">
-      <label>Min Bars (Depth)</label>
-      <select id="srs-dep" onchange="invalidateCache(); srsRender()">
-        <option value="5">5</option><option value="8">8</option>
-        <option value="10" selected>10</option><option value="12">12</option>
-        <option value="15">15</option><option value="20">20</option>
-      </select>
-    </div>
-    <div class="summary-bar">
-      <div class="stat">Dates with signal <span id="srs-stat-dates">—</span></div>
-      <div class="stat">Stocks hit <span id="srs-stat-stocks">—</span></div>
-      <div class="stat">Multi-stock dates <span id="srs-stat-multi">—</span></div>
-    </div>
-  </div>
-
-  <div class="filter-strip">
-    <label>Min stocks per date:</label>
-    <button class="filter-btn active" onclick="srsSetMin(1,this)">Any (≥1)</button>
-    <button class="filter-btn" onclick="srsSetMin(2,this)">≥2 stocks</button>
-    <button class="filter-btn" onclick="srsSetMin(3,this)">≥3 stocks</button>
-    <button class="filter-btn" onclick="srsSetMin(4,this)">≥4 stocks</button>
-    <div class="fsep"></div>
-    <div class="view-toggle">
-      <button class="vtbtn active" onclick="srsSetView('date',this)">By Date</button>
-      <button class="vtbtn" onclick="srsSetView('stock',this)">By Stock</button>
-    </div>
-  </div>
-
-  <div id="srs-dateView"></div>
-  <div id="srs-stockView">
-    <table class="stock-table">
-      <thead><tr><th>Stock</th><th>Instrument</th><th>Confluence Dates</th><th>Lookback Years</th></tr></thead>
-      <tbody id="srs-stock-tbody"></tbody>
     </table>
   </div>
 </div>
@@ -1142,8 +843,6 @@ const MONTHLY_BREAKOUT = [
   {sym:'ANGELONE',   name:'Angel One'},
 ];
 
-const SRS_LIST = ${JSON.stringify(SRS_INSTRUMENTS.map(({sym,name})=>({sym,name})))};
-
 // ── ZigZag engine ─────────────────────────────────────
 function computeZigZag(rows, dev, dep) {
   const pivots = [];
@@ -1185,8 +884,7 @@ function getZZMatrix(sym, dev, dep) {
   if (!_cache) _cache = {};
   const key = sym+'|'+dev+'|'+dep;
   if (_cache[key]) return _cache[key];
-  const rows = OHLC_DATA[sym] || (window.SRS_OHLC && window.SRS_OHLC[sym]);
-  const pivots = computeZigZag(rows, dev, dep);
+  const pivots = computeZigZag(OHLC_DATA[sym], dev, dep);
   const matrix = {};
   pivots.forEach(({date,type}) => {
     const yr = parseInt(date.substring(0,4));
@@ -1298,7 +996,7 @@ function renderModalChart() {
 
   if (_modalChart) { _modalChart.remove(); _modalChart = null; }
 
-  const rows = OHLC_DATA[sym] || (window.SRS_OHLC && window.SRS_OHLC[sym]);
+  const rows = OHLC_DATA[sym];
   if (!rows || !rows.length) {
     container.innerHTML = \`<div class="modal-no-data">No data available for \${sym}</div>\`;
     return;
@@ -1411,7 +1109,6 @@ function switchTab(id, btn) {
   else if (id==='conf') cfRender();
   else if (id==='lb') lbRender();
   else if (id==='mb') mbRender();
-  else if (id==='srs') srsRender();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1853,122 +1550,6 @@ function mbSetView(v,btn) {
   document.getElementById('mb-dateView').style.display  = v==='date'?'flex':'none';
   document.getElementById('mb-stockView').style.display = v==='stock'?'block':'none';
   mbRender();
-}
-
-// ════════════════════════════════════════════════════════
-// TAB 5 — Swing HIGH RS
-// ════════════════════════════════════════════════════════
-let _srsMin  = 1;
-let _srsView = 'date';
-
-function srsRender() {
-  const monthIdx = parseInt(document.getElementById('srs-month').value);
-  const year     = parseInt(document.getElementById('srs-year').value);
-  const dev      = parseFloat(document.getElementById('srs-dev').value);
-  const dep      = parseInt(document.getElementById('srs-dep').value);
-
-  const dateMap={}, stockConf={};
-  const stocksWithSignal=new Set();
-
-  SRS_LIST.forEach(({sym,name}) => {
-    if (!OHLC_DATA[sym] || !OHLC_DATA[sym].length) return;
-    const conf=cfGetConfluence(sym,year,monthIdx,dev,dep);
-    if (!Object.keys(conf).length) return;
-    stockConf[sym]={name,conf};
-    stocksWithSignal.add(sym);
-    for (const [day,arr] of Object.entries(conf)) {
-      if (!dateMap[day]) dateMap[day]=[];
-      dateMap[day].push({sym,name,arr});
-    }
-  });
-
-  const sortedDays=Object.keys(dateMap).sort();
-  const multiDays=sortedDays.filter(d=>dateMap[d].length>=2);
-
-  document.getElementById('srs-stat-dates').textContent  = sortedDays.length;
-  document.getElementById('srs-stat-stocks').textContent = stocksWithSignal.size;
-  document.getElementById('srs-stat-multi').textContent  = multiDays.length;
-
-  const filtered = sortedDays.filter(d=>dateMap[d].length>=_srsMin);
-
-  if (_srsView==='date') srsRenderDate(filtered, dateMap, monthIdx, year, dev, dep);
-  else srsRenderStock(stockConf, monthIdx, year);
-}
-
-function srsRenderDate(days, dateMap, monthIdx, year, dev, dep) {
-  const el=document.getElementById('srs-dateView');
-  const monthName=MONTHS_LONG[monthIdx];
-  if (!days.length) {
-    el.innerHTML=\`<div class="empty-state">No confluence dates for <strong>\${monthName} \${year}</strong> with current filters.</div>\`;
-    return;
-  }
-  el.innerHTML=days.map(day=>{
-    const stocks=dateMap[day];
-    const isMulti=stocks.length>=2;
-    const chips=stocks.sort((a,b)=>b.arr.length-a.arr.length).map(({sym,name,arr})=>{
-      const cls=cfChipCls(arr);
-      const yrs=arr.map(e=>\`<span class="yr">\${e.year}:\${e.type}</span>\`).join('');
-      const chartBtn=\`<button class="chip-chart-btn" onclick="openChart('\${sym}','\${name.replace(/'/g,"\\\\'")}',\${dev},\${dep})" title="Open chart">📈</button>\`;
-      return\`<div class="stock-chip chip-\${cls}">
-        <div style="display:flex;align-items:center;justify-content:space-between">\${chartBtn}<div class="chip-sym \${cls}" style="flex:1">\${sym} <span class="chip-count \${cls}">×\${arr.length}</span></div></div>
-        <div class="chip-name">\${name}</div>
-        <div class="chip-meta">\${yrs}</div>
-      </div>\`;
-    }).join('');
-    return\`<div class="date-card">
-      <div class="date-header">
-        <div class="date-num">\${day}</div>
-        <div>
-          <div style="color:var(--conf);font-weight:700">\${day} \${monthName} \${year}</div>
-          <div class="date-sublabel">\${stocks.length} stock\${stocks.length>1?'s':''} with Gann confluence</div>
-        </div>
-        <div class="stock-count-badge \${isMulti?'multi':''}">\${stocks.length} stock\${stocks.length>1?'s':''}</div>
-      </div>
-      <div class="stocks-grid">\${chips}</div>
-    </div>\`;
-  }).join('');
-}
-
-function srsRenderStock(stockConf, monthIdx, year) {
-  const tbody=document.getElementById('srs-stock-tbody');
-  const monthName=MONTHS_LONG[monthIdx];
-  if (!Object.keys(stockConf).length) {
-    tbody.innerHTML=\`<tr><td colspan="4" class="empty-state">No confluence dates for \${monthName} \${year}.</td></tr>\`;
-    return;
-  }
-  tbody.innerHTML=SRS_LIST.map(({sym,name}) => {
-    const sc=stockConf[sym];
-    if (!sc) {
-      if (_srsMin>1) return '';
-      return\`<tr><td>\${sym}</td><td style="color:var(--sub);font-size:11px">\${name}</td><td colspan="2" class="no-conf">—</td></tr>\`;
-    }
-    const days=Object.keys(sc.conf).sort();
-    const badges=days.map(day=>{
-      const arr=sc.conf[day];
-      const h=arr.some(e=>e.type==='H'), l=arr.some(e=>e.type==='L');
-      const cls=(h&&l)?'ev-hl':h?'ev-h':'ev-l';
-      const lbl=day+' '+((h&&l)?'H/L':h?'H':'L');
-      const tip=arr.map(e=>\`\${e.year}:\${e.type}\`).join(', ');
-      return\`<span class="ev \${cls}" title="\${tip}">⚡ \${lbl} ×\${arr.length}</span>\`;
-    }).join(' ');
-    const yrs=[...new Set(days.flatMap(d=>sc.conf[d].map(e=>e.year)))].sort().join(', ');
-    return\`<tr><td>\${sym}</td><td style="color:var(--sub);font-size:11px">\${name}</td><td>\${badges}</td><td style="color:var(--sub);font-size:11px">\${yrs}</td></tr>\`;
-  }).filter(Boolean).join('');
-}
-
-function srsSetMin(n,btn) {
-  _srsMin=n;
-  document.querySelectorAll('#tab-srs .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  srsRender();
-}
-function srsSetView(v,btn) {
-  _srsView=v;
-  document.querySelectorAll('#tab-srs .vtbtn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('srs-dateView').style.display  = v==='date'?'flex':'none';
-  document.getElementById('srs-stockView').style.display = v==='stock'?'block':'none';
-  srsRender();
 }
 
 // ── Init ───────────────────────────────────────────────
