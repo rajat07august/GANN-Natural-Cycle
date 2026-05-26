@@ -1,5 +1,5 @@
 {
-  "buildCommand": null,
+  "buildCommand": "",
   "outputDirectory": "Gann/6",
   "rewrites": [
     { "source": "/", "destination": "/trial_natural_cycle.html" }
