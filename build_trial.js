@@ -465,18 +465,34 @@ for (const { sym } of SRS_ONLY) {
   ohlcBlocks[sym] = raw.map(r => `['${r[0]}',${(+r[1]).toFixed(2)},${(+r[2]).toFixed(2)},${(+r[3]).toFixed(2)},${(+r[4]).toFixed(2)}]`).join(',');
 }
 
-// Build deduplicated list of all symbols that need OHLC in the HTML
+// ── Main OHLC (NIFTY50 + Midcap + MB) stays inside HTML ──────
 const seenOhlc = new Set();
 const ohlcSymList = [];
-for (const arr of [ALL_INSTRUMENTS, MB_INSTRUMENTS, SRS_INSTRUMENTS]) {
+for (const arr of [ALL_INSTRUMENTS, MB_INSTRUMENTS]) {
   for (const { sym, isIndex } of arr) {
     if (isIndex || seenOhlc.has(sym)) continue;
-    if (ohlcBlocks[sym] === undefined) continue; // never loaded
+    if (ohlcBlocks[sym] === undefined) continue;
     seenOhlc.add(sym);
     ohlcSymList.push(sym);
   }
 }
 const ohlcDataJS = ohlcSymList.map(sym => `  '${sym}':[${ohlcBlocks[sym] || ''}]`).join(',\n');
+
+// ── SRS OHLC → two sidecar JS files (each <25 MB) ─────────────
+const srsOnlySyms = SRS_INSTRUMENTS
+  .filter(i => !seenOhlc.has(i.sym) && ohlcBlocks[i.sym] !== undefined)
+  .filter((v,i,a) => a.findIndex(x=>x.sym===v.sym)===i);
+
+const srsLines = srsOnlySyms.map(({ sym }) => `  '${sym}':[${ohlcBlocks[sym] || ''}]`);
+const mid = Math.ceil(srsLines.length / 2);
+const srsFileA = `window.SRS_OHLC={\n${srsLines.slice(0,mid).join(',\n')}\n};`;
+const srsFileB = `Object.assign(window.SRS_OHLC,{\n${srsLines.slice(mid).join(',\n')}\n});`;
+
+fs.writeFileSync('j:/GANN Claude/Gann/6/srs_ohlc_a.js', srsFileA, 'utf8');
+fs.writeFileSync('j:/GANN Claude/Gann/6/srs_ohlc_b.js', srsFileB, 'utf8');
+const srsAkb = (fs.statSync('j:/GANN Claude/Gann/6/srs_ohlc_a.js').size/1024).toFixed(0);
+const srsBkb = (fs.statSync('j:/GANN Claude/Gann/6/srs_ohlc_b.js').size/1024).toFixed(0);
+console.error(`  srs_ohlc_a.js: ${srsAkb} KB  |  srs_ohlc_b.js: ${srsBkb} KB`);
 
 // ── Selector options ──────────────────────────────────────────
 const instrOptionsNifty = INSTRUMENTS.map(({ sym, name }) =>
@@ -727,6 +743,8 @@ const html = `<!DOCTYPE html>
   .lb-cell.has-conf { background:rgba(255,224,102,.03); }
   #lb-upcoming { display:flex; flex-direction:column; gap:10px; }
 </style>
+<script src="srs_ohlc_a.js"></script>
+<script src="srs_ohlc_b.js"></script>
 </head>
 <body>
 
@@ -1167,7 +1185,8 @@ function getZZMatrix(sym, dev, dep) {
   if (!_cache) _cache = {};
   const key = sym+'|'+dev+'|'+dep;
   if (_cache[key]) return _cache[key];
-  const pivots = computeZigZag(OHLC_DATA[sym], dev, dep);
+  const rows = OHLC_DATA[sym] || (window.SRS_OHLC && window.SRS_OHLC[sym]);
+  const pivots = computeZigZag(rows, dev, dep);
   const matrix = {};
   pivots.forEach(({date,type}) => {
     const yr = parseInt(date.substring(0,4));
@@ -1279,7 +1298,7 @@ function renderModalChart() {
 
   if (_modalChart) { _modalChart.remove(); _modalChart = null; }
 
-  const rows = OHLC_DATA[sym];
+  const rows = OHLC_DATA[sym] || (window.SRS_OHLC && window.SRS_OHLC[sym]);
   if (!rows || !rows.length) {
     container.innerHTML = \`<div class="modal-no-data">No data available for \${sym}</div>\`;
     return;
