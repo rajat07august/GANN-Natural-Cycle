@@ -99,21 +99,29 @@ const ALL_SYMS = [
   'SACHEEROME','SAFEENTP','SAREGAMA','SHRIRAMFIN','SONACOMS',
   'TATACAP','TATATECH','TBOTEK','THELEELA','TIMETECHNO','TBZ',
   'VERANDA','VISL','VRLLOG','WEWORK',
+  // ── Added 2026-08-06 (skipped batch — confirmed valid NSE tickers) ─
+  'VAML','VOGL','APS',
+  'VIJAYA','VINCOFE','DIFFNKG','ANTELOPUS','BLUSPRING','RELTD','JAYBARMARU',
 ];
 
 // ── Fetch one symbol ──────────────────────────────────────────
 async function fetchSymbol(sym) {
   const yfSym = toYFSym(sym);
   let raw;
-  try {
-    raw = await yf.historical(yfSym, {
-      period1:  START,
-      period2:  END,
-      interval: '1d',
-      events:   'history',
-    }, { validateResult: false });
-  } catch (e) {
-    return { sym, status: 'error', msg: e.message.substring(0, 80) };
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  for (const period2 of [END, yesterday]) {
+    try {
+      raw = await yf.historical(yfSym, {
+        period1:  START,
+        period2,
+        interval: '1d',
+        events:   'history',
+      }, { validateResult: false });
+      break;
+    } catch (e) {
+      if (period2 === END && /null values/i.test(e.message)) continue;
+      return { sym, status: 'error', msg: e.message.substring(0, 80) };
+    }
   }
 
   if (!raw || !raw.length) return { sym, status: 'empty' };

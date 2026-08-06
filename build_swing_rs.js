@@ -354,6 +354,17 @@ const INSTRUMENTS = [
   { sym:'VISL',        name:'Visaka Industries'                },
   { sym:'VRLLOG',      name:'VRL Logistics'                    },
   { sym:'WEWORK',      name:'WeWork India'                     },
+  // ── Added 2026-08-06 (confirmed valid NSE tickers) ───────────
+  { sym:'VAML',        name:'Vedanta Aluminium Metal'          },
+  { sym:'VOGL',        name:'Vedanta Oil and Gas'              },
+  { sym:'APS',         name:'APS Ltd'                          },
+  { sym:'VIJAYA',      name:'Vijaya Diagnostics'               },
+  { sym:'VINCOFE',     name:'Vintage Coffee and Beverages'     },
+  { sym:'DIFFNKG',     name:'Diffusion Engineers'              },
+  { sym:'ANTELOPUS',   name:'Antelopus Selan Energy'           },
+  { sym:'BLUSPRING',   name:'Bluspring Enterprises'            },
+  { sym:'RELTD',       name:'Ravindra Energy'                  },
+  { sym:'JAYBARMARU',  name:'Jay Bharat Maruti'                },
 ];
 
 // ── Invest 2027 Domain — separate tab + feeds CF Calendar ──────
