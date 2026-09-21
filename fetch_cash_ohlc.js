@@ -35,6 +35,9 @@ const YF_OVERRIDES = {
   'SIKA':      'SIKA.BO',
   'AMIC':      'AMIC.BO',
   'COCKERILL': 'COCKERILL.BO',
+  'FABCLEAN':  'FABCLEAN.BO',
+  'SHREEREF':  'SHREEREF.BO',
+  'KALYANI':   'KALYANI.BO',
 };
 
 function toYFSym(sym) {
@@ -102,6 +105,13 @@ const ALL_SYMS = [
   // ── Added 2026-08-06 (skipped batch — confirmed valid NSE tickers) ─
   'VAML','VOGL','APS',
   'VIJAYA','VINCOFE','DIFFNKG','ANTELOPUS','BLUSPRING','RELTD','JAYBARMARU',
+  // ── Added 2026-09-21 (from watchlists) ──────────────────────
+  'DIVGIITTS','NSLNISP','APCOTEXIND','JGCHEM','BAJAJHIND','BALRAMCHIN',
+  'GALAXYSURF','KDDL','INDOMIM','PANAMAPET','UNIMECH','AHCL','GNA',
+  'KAJARIACER','NEULANDLAB','AJANTPHARM','E2E','FOSECOIND','PGIL','VSSL',
+  'POLICYBZR','STOVEKRAFT','MEDANTA','JSWINFRA','TVSSRICHAK','UNIHEALTH',
+  'PAYTM','BLUESTONE','MEESHO','SHANTIGOLD','ATLANTAELE','UNIPARTS','ANTHEM',
+  'FABCLEAN','SHREEREF','KALYANI',
 ];
 
 // ── Fetch one symbol ──────────────────────────────────────────
