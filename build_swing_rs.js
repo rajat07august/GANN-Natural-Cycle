@@ -448,6 +448,13 @@ const INVEST_DOMAIN = [
   { sym:'VILAS',      name:'Vilas Transcore'               },
   { sym:'WHEELS',     name:'Wheels India'                  },
   { sym:'YASHHV',     name:'Yash H.V. Welding Electrodes'  },
+  // ── Added 2026-09-21 (from Invest 2027 Domain watchlist) ─────
+  { sym:'ATLANTAELE', name:'Atlanta Electricals'            },
+  { sym:'UNIPARTS',   name:'Uniparts India'                 },
+  { sym:'ANTHEM',     name:'Anthem Biosciences'             },
+  { sym:'PANAMAPET',  name:'Panama Petrochem'               },
+  { sym:'SHREEREF',   name:'Shree Refrigerations'           },
+  { sym:'KALYANI',    name:'Kalyani Cast-Tech'              },
 ];
 
 // ── Read all OHLC in one Python call (CSV primary, parquet fallback) ──
