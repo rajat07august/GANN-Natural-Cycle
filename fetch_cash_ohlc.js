@@ -213,4 +213,5 @@ async function main() {
   console.log('='.repeat(60));
 }
 
-main().catch(e => { console.error('Fatal:', e); process.exit(1); });
+if (require.main === module) main().catch(e => { console.error('Fatal:', e); process.exit(1); });
+module.exports = { ALL_SYMS, toYFSym };

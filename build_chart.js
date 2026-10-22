@@ -13,7 +13,6 @@ const HIST_NAMES = {
   JSWSTEEL:   ['JSWSTL','JSWSTEEL'],
   HINDALCO:   ['HINDALC0','HINDALCO'],
   TATASTEEL:  ['TISCO','TATASTEEL'],
-  TATAMOTORS: ['TELCO','TATAMOTORS'],
   AXISBANK:   ['UTIBANK','AXISBANK'],
   KOTAKBANK:  ['KOTAKMAH','KOTAKBANK'],
   HEROMOTOCO: ['HEROHONDA','HEROMOTOCO'],
@@ -61,7 +60,6 @@ const INSTRUMENTS = [
   { sym:'SHRIRAMFIN', name:'Shriram Finance'          },
   { sym:'SUNPHARMA',  name:'Sun Pharma'               },
   { sym:'TATACONSUM', name:'Tata Consumer'            },
-  { sym:'TATAMOTORS', name:'Tata Motors'              },
   { sym:'TATASTEEL',  name:'Tata Steel'               },
   { sym:'TCS',        name:'TCS'                      },
   { sym:'TECHM',      name:'Tech Mahindra'            },
@@ -69,7 +67,6 @@ const INSTRUMENTS = [
   { sym:'TRENT',      name:'Trent'                    },
   { sym:'ULTRACEMCO', name:'UltraTech Cement'         },
   { sym:'WIPRO',      name:'Wipro'                    },
-  { sym:'ZOMATO',     name:'Zomato'                   },
 ];
 
 // ── CSV helpers ───────────────────────────────────────────────
