@@ -1,7 +1,8 @@
 {
   "scripts": {
     "build": "node build_trial.js",
-    "deploy": "node build_trial.js && npx wrangler pages deploy Gann/6 --project-name gann-natural-cycle --branch master --commit-dirty=true"
+    "build-srs": "node build_swing_rs.js",
+    "deploy-srs": "node build_swing_rs.js && cd Gann/6 && npx vercel deploy --prod"
   },
   "dependencies": {
     "yahoo-finance2": "^3.14.0"

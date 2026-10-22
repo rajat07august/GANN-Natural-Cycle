@@ -1,0 +1,1004 @@
+{
+  "ABSLAMC": {
+    "dev": 2,
+    "dep": 8,
+    "n": 8,
+    "w": 50
+  },
+  "ADANIENSOL": {
+    "dev": 5,
+    "dep": 8,
+    "n": 58,
+    "w": 41.4
+  },
+  "ADANIENT": {
+    "dev": 5,
+    "dep": 8,
+    "n": 112,
+    "w": 56.3
+  },
+  "ADANIPOWER": {
+    "dev": 4,
+    "dep": 5,
+    "n": 108,
+    "w": 58.3
+  },
+  "AETHER": {
+    "dev": 3,
+    "dep": 5,
+    "n": 8,
+    "w": 50
+  },
+  "ANGELONE": {
+    "dev": 7,
+    "dep": 5,
+    "n": 13,
+    "w": 30.8
+  },
+  "APEX": {
+    "dev": 2,
+    "dep": 12,
+    "n": 30,
+    "w": 40
+  },
+  "APLAPOLLO": {
+    "dev": 10,
+    "dep": 8,
+    "n": 40,
+    "w": 60
+  },
+  "ARIES": {
+    "dev": 2,
+    "dep": 20,
+    "n": 25,
+    "w": 44
+  },
+  "ARVIND": {
+    "dev": 10,
+    "dep": 5,
+    "n": 90,
+    "w": 65.6
+  },
+  "ASTEC": {
+    "dev": 10,
+    "dep": 10,
+    "n": 44,
+    "w": 43.2
+  },
+  "ASTERDM": {
+    "dev": 7,
+    "dep": 12,
+    "n": 15,
+    "w": 73.3
+  },
+  "ASTRAMICRO": {
+    "dev": 2,
+    "dep": 20,
+    "n": 57,
+    "w": 47.4
+  },
+  "ATALREAL": {
+    "dev": 10,
+    "dep": 5,
+    "n": 14,
+    "w": 64.3
+  },
+  "ATGL": {
+    "dev": 2,
+    "dep": 5,
+    "n": 56,
+    "w": 50
+  },
+  "AVANTIFEED": {
+    "dev": 2,
+    "dep": 12,
+    "n": 61,
+    "w": 42.6
+  },
+  "AXISCADES": {
+    "dev": 4,
+    "dep": 5,
+    "n": 137,
+    "w": 61.3
+  },
+  "BAJAJCON": {
+    "dev": 7,
+    "dep": 8,
+    "n": 49,
+    "w": 57.1
+  },
+  "BANCOINDIA": {
+    "dev": 2,
+    "dep": 20,
+    "n": 39,
+    "w": 46.2
+  },
+  "BBOX": {
+    "dev": 10,
+    "dep": 15,
+    "n": 43,
+    "w": 53.5
+  },
+  "BHEL": {
+    "dev": 2,
+    "dep": 20,
+    "n": 39,
+    "w": 61.5
+  },
+  "BLISSGVS": {
+    "dev": 10,
+    "dep": 20,
+    "n": 28,
+    "w": 42.9
+  },
+  "BSE": {
+    "dev": 3,
+    "dep": 12,
+    "n": 16,
+    "w": 43.8
+  },
+  "CARERATING": {
+    "dev": 10,
+    "dep": 15,
+    "n": 8,
+    "w": 50
+  },
+  "CARYSIL": {
+    "dev": 2,
+    "dep": 5,
+    "n": 22,
+    "w": 40.9
+  },
+  "CCL": {
+    "dev": 5,
+    "dep": 5,
+    "n": 118,
+    "w": 51.7
+  },
+  "CENTUM": {
+    "dev": 7,
+    "dep": 20,
+    "n": 30,
+    "w": 53.3
+  },
+  "CHENNPETRO": {
+    "dev": 7,
+    "dep": 12,
+    "n": 56,
+    "w": 55.4
+  },
+  "CUMMINSIND": {
+    "dev": 10,
+    "dep": 20,
+    "n": 19,
+    "w": 42.1
+  },
+  "CUPID": {
+    "dev": 2,
+    "dep": 20,
+    "n": 13,
+    "w": 30.8
+  },
+  "DATAMATICS": {
+    "dev": 3,
+    "dep": 5,
+    "n": 130,
+    "w": 65.4
+  },
+  "DATAPATTNS": {
+    "dev": 5,
+    "dep": 8,
+    "n": 8,
+    "w": 37.5
+  },
+  "DCMSHRIRAM": {
+    "dev": 4,
+    "dep": 5,
+    "n": 115,
+    "w": 53
+  },
+  "DECNGOLD": {
+    "dev": 5,
+    "dep": 5,
+    "n": 115,
+    "w": 64.3
+  },
+  "DEEPAKFERT": {
+    "dev": 3,
+    "dep": 8,
+    "n": 132,
+    "w": 62.9
+  },
+  "DEEPINDS": {
+    "dev": 7,
+    "dep": 5,
+    "n": 10,
+    "w": 60
+  },
+  "DIACABS": {
+    "dev": 10,
+    "dep": 10,
+    "n": 19,
+    "w": 57.9
+  },
+  "DREDGECORP": {
+    "dev": 2,
+    "dep": 15,
+    "n": 63,
+    "w": 57.1
+  },
+  "DRREDDY": {
+    "dev": 4,
+    "dep": 10,
+    "n": 91,
+    "w": 49.5
+  },
+  "DSSL": {
+    "dev": 10,
+    "dep": 5,
+    "n": 88,
+    "w": 69.3
+  },
+  "DYNAMATECH": {
+    "dev": 7,
+    "dep": 20,
+    "n": 42,
+    "w": 52.4
+  },
+  "ENDURANCE": {
+    "dev": 4,
+    "dep": 5,
+    "n": 67,
+    "w": 62.7
+  },
+  "EQUITASBNK": {
+    "dev": 4,
+    "dep": 8,
+    "n": 17,
+    "w": 52.9
+  },
+  "ESABINDIA": {
+    "dev": 10,
+    "dep": 20,
+    "n": 31,
+    "w": 41.9
+  },
+  "EXIDEIND": {
+    "dev": 3,
+    "dep": 8,
+    "n": 102,
+    "w": 58.8
+  },
+  "FCL": {
+    "dev": 7,
+    "dep": 15,
+    "n": 30,
+    "w": 56.7
+  },
+  "FEDERALBNK": {
+    "dev": 2,
+    "dep": 5,
+    "n": 153,
+    "w": 52.3
+  },
+  "FIEMIND": {
+    "dev": 4,
+    "dep": 8,
+    "n": 105,
+    "w": 58.1
+  },
+  "FLUOROCHEM": {
+    "dev": 5,
+    "dep": 5,
+    "n": 24,
+    "w": 41.7
+  },
+  "GAIL": {
+    "dev": 5,
+    "dep": 5,
+    "n": 137,
+    "w": 59.1
+  },
+  "GENUSPOWER": {
+    "dev": 5,
+    "dep": 8,
+    "n": 104,
+    "w": 57.7
+  },
+  "GESHIP": {
+    "dev": 10,
+    "dep": 20,
+    "n": 26,
+    "w": 57.7
+  },
+  "GICRE": {
+    "dev": 2,
+    "dep": 20,
+    "n": 10,
+    "w": 50
+  },
+  "GLAND": {
+    "dev": 3,
+    "dep": 5,
+    "n": 25,
+    "w": 56
+  },
+  "GLENMARK": {
+    "dev": 10,
+    "dep": 20,
+    "n": 20,
+    "w": 35
+  },
+  "GMBREW": {
+    "dev": 10,
+    "dep": 15,
+    "n": 43,
+    "w": 48.8
+  },
+  "GMDCLTD": {
+    "dev": 5,
+    "dep": 5,
+    "n": 124,
+    "w": 65.3
+  },
+  "GOCLCORP": {
+    "dev": 7,
+    "dep": 10,
+    "n": 54,
+    "w": 51.9
+  },
+  "GOKULAGRO": {
+    "dev": 2,
+    "dep": 5,
+    "n": 79,
+    "w": 53.2
+  },
+  "GOODLUCK": {
+    "dev": 10,
+    "dep": 8,
+    "n": 20,
+    "w": 70
+  },
+  "GPIL": {
+    "dev": 10,
+    "dep": 5,
+    "n": 102,
+    "w": 67.6
+  },
+  "GRANULES": {
+    "dev": 2,
+    "dep": 5,
+    "n": 137,
+    "w": 67.9
+  },
+  "GRAPHITE": {
+    "dev": 5,
+    "dep": 5,
+    "n": 122,
+    "w": 53.3
+  },
+  "GRASIM": {
+    "dev": 3,
+    "dep": 8,
+    "n": 119,
+    "w": 56.3
+  },
+  "GRSE": {
+    "dev": 5,
+    "dep": 8,
+    "n": 36,
+    "w": 52.8
+  },
+  "GRWRHITECH": {
+    "dev": 2,
+    "dep": 5,
+    "n": 8,
+    "w": 62.5
+  },
+  "GUJALKALI": {
+    "dev": 2,
+    "dep": 8,
+    "n": 107,
+    "w": 48.6
+  },
+  "GVTD": {
+    "dev": 3,
+    "dep": 12,
+    "n": 67,
+    "w": 55.2
+  },
+  "HBLENGINE": {
+    "dev": 2,
+    "dep": 20,
+    "n": 48,
+    "w": 52.1
+  },
+  "HEG": {
+    "dev": 10,
+    "dep": 20,
+    "n": 36,
+    "w": 44.4
+  },
+  "HFCL": {
+    "dev": 2,
+    "dep": 15,
+    "n": 56,
+    "w": 44.6
+  },
+  "HIRECT": {
+    "dev": 2,
+    "dep": 10,
+    "n": 75,
+    "w": 66.7
+  },
+  "IFCI": {
+    "dev": 7,
+    "dep": 20,
+    "n": 42,
+    "w": 52.4
+  },
+  "IMFA": {
+    "dev": 10,
+    "dep": 20,
+    "n": 24,
+    "w": 54.2
+  },
+  "INDIAGLYCO": {
+    "dev": 2,
+    "dep": 5,
+    "n": 120,
+    "w": 56.7
+  },
+  "INDOBORAX": {
+    "dev": 2,
+    "dep": 5,
+    "n": 12,
+    "w": 41.7
+  },
+  "IPCALAB": {
+    "dev": 10,
+    "dep": 20,
+    "n": 21,
+    "w": 47.6
+  },
+  "JAMNAAUTO": {
+    "dev": 5,
+    "dep": 10,
+    "n": 67,
+    "w": 47.8
+  },
+  "JAYNECOIND": {
+    "dev": 5,
+    "dep": 5,
+    "n": 115,
+    "w": 60.9
+  },
+  "JMFINANCIL": {
+    "dev": 5,
+    "dep": 15,
+    "n": 71,
+    "w": 53.5
+  },
+  "KERNEX": {
+    "dev": 5,
+    "dep": 15,
+    "n": 48,
+    "w": 62.5
+  },
+  "KINGFA": {
+    "dev": 7,
+    "dep": 5,
+    "n": 84,
+    "w": 59.5
+  },
+  "KIOCL": {
+    "dev": 3,
+    "dep": 5,
+    "n": 60,
+    "w": 43.3
+  },
+  "KIRLOSENG": {
+    "dev": 10,
+    "dep": 20,
+    "n": 29,
+    "w": 58.6
+  },
+  "KOLTEPATIL": {
+    "dev": 10,
+    "dep": 5,
+    "n": 80,
+    "w": 56.3
+  },
+  "KPIGREEN": {
+    "dev": 5,
+    "dep": 5,
+    "n": 10,
+    "w": 20
+  },
+  "KPIL": {
+    "dev": 4,
+    "dep": 5,
+    "n": 118,
+    "w": 59.3
+  },
+  "KPL": {
+    "dev": 7,
+    "dep": 15,
+    "n": 11,
+    "w": 54.5
+  },
+  "KPRMILL": {
+    "dev": 4,
+    "dep": 10,
+    "n": 91,
+    "w": 58.2
+  },
+  "KRISHANA": {
+    "dev": 4,
+    "dep": 5,
+    "n": 40,
+    "w": 50
+  },
+  "KSL": {
+    "dev": 7,
+    "dep": 15,
+    "n": 44,
+    "w": 52.3
+  },
+  "KTKBANK": {
+    "dev": 5,
+    "dep": 8,
+    "n": 105,
+    "w": 53.3
+  },
+  "LINDEINDIA": {
+    "dev": 5,
+    "dep": 5,
+    "n": 114,
+    "w": 58.8
+  },
+  "LUMAXTECH": {
+    "dev": 4,
+    "dep": 5,
+    "n": 123,
+    "w": 57.7
+  },
+  "MANINDS": {
+    "dev": 2,
+    "dep": 15,
+    "n": 58,
+    "w": 51.7
+  },
+  "MANORAMA": {
+    "dev": 2,
+    "dep": 5,
+    "n": 9,
+    "w": 0
+  },
+  "MARINE": {
+    "dev": 10,
+    "dep": 5,
+    "n": 12,
+    "w": 50
+  },
+  "MAYURUNIQ": {
+    "dev": 3,
+    "dep": 5,
+    "n": 109,
+    "w": 51.4
+  },
+  "MBAPL": {
+    "dev": 10,
+    "dep": 8,
+    "n": 15,
+    "w": 46.7
+  },
+  "MOREPENLAB": {
+    "dev": 10,
+    "dep": 20,
+    "n": 41,
+    "w": 46.3
+  },
+  "MTARTECH": {
+    "dev": 3,
+    "dep": 5,
+    "n": 26,
+    "w": 76.9
+  },
+  "NATIONALUM": {
+    "dev": 10,
+    "dep": 20,
+    "n": 20,
+    "w": 45
+  },
+  "NDRAUTO": {
+    "dev": 10,
+    "dep": 8,
+    "n": 10,
+    "w": 50
+  },
+  "NLCINDIA": {
+    "dev": 7,
+    "dep": 12,
+    "n": 71,
+    "w": 56.3
+  },
+  "NTPC": {
+    "dev": 3,
+    "dep": 5,
+    "n": 138,
+    "w": 58.7
+  },
+  "OLECTRA": {
+    "dev": 4,
+    "dep": 8,
+    "n": 82,
+    "w": 74.4
+  },
+  "ONEPOINT": {
+    "dev": 2,
+    "dep": 5,
+    "n": 46,
+    "w": 58.7
+  },
+  "PAISALO": {
+    "dev": 2,
+    "dep": 5,
+    "n": 105,
+    "w": 55.2
+  },
+  "PARAS": {
+    "dev": 2,
+    "dep": 5,
+    "n": 9,
+    "w": 33.3
+  },
+  "PFOCUS": {
+    "dev": 4,
+    "dep": 8,
+    "n": 96,
+    "w": 56.3
+  },
+  "POCL": {
+    "dev": 7,
+    "dep": 12,
+    "n": 10,
+    "w": 50
+  },
+  "POWERINDIA": {
+    "dev": 3,
+    "dep": 5,
+    "n": 32,
+    "w": 53.1
+  },
+  "PRECWIRE": {
+    "dev": 5,
+    "dep": 10,
+    "n": 91,
+    "w": 63.7
+  },
+  "PREMEXPLN": {
+    "dev": 10,
+    "dep": 20,
+    "n": 10,
+    "w": 50
+  },
+  "PRIVISCL": {
+    "dev": 5,
+    "dep": 8,
+    "n": 55,
+    "w": 52.7
+  },
+  "PSPPROJECT": {
+    "dev": 10,
+    "dep": 10,
+    "n": 9,
+    "w": 44.4
+  },
+  "RAIN": {
+    "dev": 4,
+    "dep": 5,
+    "n": 133,
+    "w": 61.7
+  },
+  "RAJESH": {
+    "dev": 4,
+    "dep": 5,
+    "n": 85,
+    "w": 54.1
+  },
+  "RANEHOLDIN": {
+    "dev": 7,
+    "dep": 8,
+    "n": 78,
+    "w": 55.1
+  },
+  "SANDHAR": {
+    "dev": 5,
+    "dep": 12,
+    "n": 16,
+    "w": 62.5
+  },
+  "SANGAMIND": {
+    "dev": 10,
+    "dep": 15,
+    "n": 47,
+    "w": 51.1
+  },
+  "SANSERA": {
+    "dev": 2,
+    "dep": 8,
+    "n": 8,
+    "w": 87.5
+  },
+  "SATIN": {
+    "dev": 3,
+    "dep": 5,
+    "n": 80,
+    "w": 50
+  },
+  "SCHNEIDER": {
+    "dev": 4,
+    "dep": 5,
+    "n": 118,
+    "w": 59.3
+  },
+  "SCI": {
+    "dev": 3,
+    "dep": 8,
+    "n": 110,
+    "w": 54.5
+  },
+  "SEAMECLTD": {
+    "dev": 2,
+    "dep": 8,
+    "n": 100,
+    "w": 65
+  },
+  "SHAILY": {
+    "dev": 5,
+    "dep": 5,
+    "n": 12,
+    "w": 41.7
+  },
+  "SHARDACROP": {
+    "dev": 10,
+    "dep": 15,
+    "n": 24,
+    "w": 41.7
+  },
+  "SHILPAMED": {
+    "dev": 7,
+    "dep": 5,
+    "n": 85,
+    "w": 56.5
+  },
+  "SHRIPISTON": {
+    "dev": 10,
+    "dep": 20,
+    "n": 8,
+    "w": 75
+  },
+  "SHYAMMETL": {
+    "dev": 3,
+    "dep": 5,
+    "n": 20,
+    "w": 60
+  },
+  "SJS": {
+    "dev": 4,
+    "dep": 5,
+    "n": 10,
+    "w": 50
+  },
+  "SKIPPER": {
+    "dev": 5,
+    "dep": 5,
+    "n": 92,
+    "w": 62
+  },
+  "SMSPHARMA": {
+    "dev": 4,
+    "dep": 10,
+    "n": 84,
+    "w": 60.7
+  },
+  "SOUTHBANK": {
+    "dev": 2,
+    "dep": 20,
+    "n": 34,
+    "w": 58.8
+  },
+  "SOUTHWEST": {
+    "dev": 10,
+    "dep": 5,
+    "n": 28,
+    "w": 53.6
+  },
+  "SPORTKING": {
+    "dev": 2,
+    "dep": 5,
+    "n": 11,
+    "w": 27.3
+  },
+  "SSWL": {
+    "dev": 5,
+    "dep": 15,
+    "n": 54,
+    "w": 46.3
+  },
+  "STAR": {
+    "dev": 10,
+    "dep": 20,
+    "n": 31,
+    "w": 41.9
+  },
+  "STARHEALTH": {
+    "dev": 2,
+    "dep": 5,
+    "n": 9,
+    "w": 55.6
+  },
+  "STLTECH": {
+    "dev": 2,
+    "dep": 10,
+    "n": 98,
+    "w": 59.2
+  },
+  "SUNFLAG": {
+    "dev": 2,
+    "dep": 10,
+    "n": 97,
+    "w": 48.5
+  },
+  "SURYODAY": {
+    "dev": 3,
+    "dep": 5,
+    "n": 14,
+    "w": 35.7
+  },
+  "SUZLON": {
+    "dev": 10,
+    "dep": 20,
+    "n": 38,
+    "w": 44.7
+  },
+  "TATACOMM": {
+    "dev": 5,
+    "dep": 10,
+    "n": 84,
+    "w": 56
+  },
+  "TDPOWERSYS": {
+    "dev": 7,
+    "dep": 8,
+    "n": 69,
+    "w": 53.6
+  },
+  "TECHNOE": {
+    "dev": 10,
+    "dep": 20,
+    "n": 26,
+    "w": 61.5
+  },
+  "THERMAX": {
+    "dev": 7,
+    "dep": 5,
+    "n": 101,
+    "w": 58.4
+  },
+  "THYROCARE": {
+    "dev": 7,
+    "dep": 5,
+    "n": 37,
+    "w": 48.6
+  },
+  "TI": {
+    "dev": 2,
+    "dep": 10,
+    "n": 84,
+    "w": 51.2
+  },
+  "TIPSMUSIC": {
+    "dev": 7,
+    "dep": 15,
+    "n": 48,
+    "w": 60.4
+  },
+  "TRENT": {
+    "dev": 7,
+    "dep": 20,
+    "n": 27,
+    "w": 59.3
+  },
+  "TVSHLTD": {
+    "dev": 10,
+    "dep": 8,
+    "n": 43,
+    "w": 62.8
+  },
+  "UJJIVANSFB": {
+    "dev": 7,
+    "dep": 8,
+    "n": 10,
+    "w": 40
+  },
+  "UNIVCABLES": {
+    "dev": 4,
+    "dep": 10,
+    "n": 92,
+    "w": 59.8
+  },
+  "VINDHYATEL": {
+    "dev": 2,
+    "dep": 12,
+    "n": 54,
+    "w": 61.1
+  },
+  "VIPULORG": {
+    "dev": 3,
+    "dep": 8,
+    "n": 91,
+    "w": 57.1
+  },
+  "VISHNU": {
+    "dev": 4,
+    "dep": 5,
+    "n": 107,
+    "w": 57
+  },
+  "VIVIANA": {
+    "dev": 2,
+    "dep": 5,
+    "n": 8,
+    "w": 0
+  },
+  "VTL": {
+    "dev": 10,
+    "dep": 8,
+    "n": 51,
+    "w": 51
+  },
+  "WABAG": {
+    "dev": 10,
+    "dep": 20,
+    "n": 26,
+    "w": 46.2
+  },
+  "WELENT": {
+    "dev": 2,
+    "dep": 10,
+    "n": 93,
+    "w": 61.3
+  },
+  "WHEELS": {
+    "dev": 4,
+    "dep": 8,
+    "n": 93,
+    "w": 58.1
+  },
+  "WOCKPHARMA": {
+    "dev": 5,
+    "dep": 8,
+    "n": 97,
+    "w": 61.9
+  },
+  "ZENTEC": {
+    "dev": 2,
+    "dep": 12,
+    "n": 36,
+    "w": 44.4
+  },
+  "ZFCVINDIA": {
+    "dev": 10,
+    "dep": 20,
+    "n": 24,
+    "w": 50
+  },
+  "ZYDUSWELL": {
+    "dev": 2,
+    "dep": 5,
+    "n": 124,
+    "w": 58.1
+  }
+}

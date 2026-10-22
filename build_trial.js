@@ -14,7 +14,6 @@ const HIST_NAMES = {
   JSWSTEEL:   ['JSWSTL','JSWSTEEL'],
   HINDALCO:   ['HINDALC0','HINDALCO'],
   TATASTEEL:  ['TISCO','TATASTEEL'],
-  TATAMOTORS: ['TELCO','TATAMOTORS'],
   AXISBANK:   ['UTIBANK','AXISBANK'],
   KOTAKBANK:  ['KOTAKMAH','KOTAKBANK'],
   HEROMOTOCO: ['HEROHONDA','HEROMOTOCO'],
@@ -63,7 +62,6 @@ const INSTRUMENTS = [
   { sym:'SHRIRAMFIN', name:'Shriram Finance'                 },
   { sym:'SUNPHARMA',  name:'Sun Pharma'                      },
   { sym:'TATACONSUM', name:'Tata Consumer'                   },
-  { sym:'TATAMOTORS', name:'Tata Motors'                     },
   { sym:'TATASTEEL',  name:'Tata Steel'                      },
   { sym:'TCS',        name:'TCS'                             },
   { sym:'TECHM',      name:'Tech Mahindra'                   },
@@ -71,7 +69,6 @@ const INSTRUMENTS = [
   { sym:'TRENT',      name:'Trent'                           },
   { sym:'ULTRACEMCO', name:'UltraTech Cement'                },
   { sym:'WIPRO',      name:'Wipro'                           },
-  { sym:'ZOMATO',     name:'Zomato'                          },
 ];
 
 const MIDCAP_INSTRUMENTS = [
@@ -96,10 +93,19 @@ const MIDCAP_INSTRUMENTS = [
   { sym:'POLYCAB',     name:'Polycab India'                },
   { sym:'NHPC',        name:'NHPC'                         },
   { sym:'SJVN',        name:'SJVN'                         },
-  { sym:'GMRINFRA',    name:'GMR Airports'                 },
   { sym:'CONCOR',      name:'Container Corporation'        },
   { sym:'COCHINSHIP',  name:'Cochin Shipyard'              },
   { sym:'MAZDOCK',     name:'Mazagon Dock'                 },
+  { sym:'BHEL',        name:'Bharat Heavy Electricals'     },
+  { sym:'BANDHANBNK',  name:'Bandhan Bank'                 },
+  { sym:'BANKBARODA',  name:'Bank of Baroda'               },
+  { sym:'BANKINDIA',   name:'Bank of India'                },
+  { sym:'CUB',         name:'City Union Bank'              },
+  { sym:'DHANBANK',    name:'Dhanlaxmi Bank'               },
+  { sym:'RBLBANK',     name:'RBL Bank'                     },
+  { sym:'DLF',         name:'DLF'                          },
+  { sym:'OBEROIRLTY',  name:'Oberoi Realty'                },
+  { sym:'GODREJPROP',  name:'Godrej Properties'            },
 ];
 
 // ── CSV helpers ───────────────────────────────────────────────
@@ -116,6 +122,11 @@ function parseCSV(text) {
 
 const ADJ_DIR = 'j:/Swing Trading/Swing Trading/processed_adj';
 const RAW_DIR = 'j:/Swing Trading/Swing Trading/processed';
+
+const BEST_COMBOS_FILE = 'j:/GANN Claude/Backtest/best_combos_main.json';
+const bestCombosJS = fs.existsSync(BEST_COMBOS_FILE)
+  ? fs.readFileSync(BEST_COMBOS_FILE, 'utf8')
+  : '{}';
 
 let _src1Cache = null;
 function getSrc1() {
@@ -379,6 +390,7 @@ const html = `<!DOCTYPE html>
   /* ── Legend ── */
   .legend { display:flex; gap:20px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
   .leg { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--sub); }
+  .best-combo{margin-left:auto;flex-shrink:0;font-size:11px;color:var(--accent);background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.25);border-radius:6px;padding:3px 12px;white-space:nowrap}
   .dot { width:9px; height:9px; border-radius:3px; flex-shrink:0; }
 
   /* ══ TAB 1 — Natural Cycle ══ */
@@ -615,6 +627,7 @@ const html = `<!DOCTYPE html>
     <div class="leg"><div class="dot" style="background:var(--red)"></div> Low (L)</div>
     <div class="leg"><div class="dot" style="background:var(--orange)"></div> High + Low same date</div>
     <div class="leg"><div class="dot" style="background:var(--conf)"></div> Confluence (≥2 years)</div>
+    <span id="nc-best-combo" class="best-combo" style="display:none"></span>
   </div>
 
   <div class="wrap">
@@ -797,6 +810,7 @@ const html = `<!DOCTYPE html>
 // ════════════════════════════════════════════════════════
 const INSTRUMENTS = ${instrJS};
 const MIDCAP_INSTRUMENTS = ${midcapInstrJS};
+const BEST_COMBOS = ${bestCombosJS};
 const NIFTY_F = ${NIFTY_F_JS};
 const OHLC_DATA = {
 ${ohlcDataJS}
@@ -1113,10 +1127,21 @@ function switchTab(id, btn) {
 
 // ════════════════════════════════════════════════════════
 // TAB 1 — Natural Cycle
+// ── Best combo badge ──────────────────────────────────────
+function showBestCombo(sym) {
+  const el = document.getElementById('nc-best-combo');
+  if (!el) return;
+  const bc = BEST_COMBOS[sym];
+  if (!bc) { el.style.display = 'none'; return; }
+  el.textContent = \`Best: Dev \${bc.dev}% · Depth \${bc.dep}   \${bc.n}T · \${bc.w}%W\`;
+  el.style.display = 'inline-block';
+}
+
 // ════════════════════════════════════════════════════════
 function ncOnInstrChange() {
   const sym = document.getElementById('nc-instr').value;
   document.getElementById('nc-zz').classList.toggle('hidden', sym==='NIFTY');
+  showBestCombo(sym);
   invalidateCache();
   ncRender();
 }
@@ -1553,6 +1578,7 @@ function mbSetView(v,btn) {
 }
 
 // ── Init ───────────────────────────────────────────────
+showBestCombo(document.getElementById('nc-instr').value);
 ncRender();
 </script>
 </body>

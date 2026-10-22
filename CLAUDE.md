@@ -3,26 +3,41 @@
 ## Working Directory
 `j:\GANN Claude\`
 
+## Vercel URLs
+- **NIFTY50 Dashboard:** https://gann-natural-cycle.vercel.app
+- **Cash Stocks Dashboard:** https://cash-stocks-gann.vercel.app
+
 ## Source Files (do not modify)
 - `Gann/6/1/Natural Cycle.xlsx` — 48 sheets. NIFTY_F (1995–2025), BANKNIFTY_F (2005–2023), FINNIFTY (2012–2023), TCS, ~20 other stocks.
 - `Gann/6/1/Dynamic Cycle_.xlsm` — 74 sheets. HOLIDAYS sheet, 70+ NSE instrument sheets, RESULT sheet (6112 rows).
 - `Dataset/NIFTY50_all.csv` — OHLC for NIFTY50 stocks, 2007–2021. Used as source 1 for historical data.
 
 ## OHLC Data Sources
+
+### Main Dashboard (trial_natural_cycle.html)
 - **Source 1:** `Dataset/NIFTY50_all.csv` (2007–2021, NIFTY50 stocks + old NSE names)
-- **Source 2:** `j:/Swing Trading/Swing Trading/processed/SYMBOL.csv` (2020–2026, 2646 stocks, updated daily via bhavcopy)
+- **Source 2:** `j:/Swing Trading/Swing Trading/processed/SYMBOL.csv` (2020–2026, bhavcopy daily)
+- **Source 3:** `j:/Swing Trading/Swing Trading/processed_adj/SYMBOL.csv` (Yahoo Finance adjusted, 2000–2026) — primary for main dashboard; fetched by `fetch_adjusted.js`
 - Merged in `build_trial.js` → `mergeRows(sym)` deduplicates by date, sorts chronologically
 - Historical NSE name mapping: HINDLEVER→HINDUNILVR, BHARTI→BHARTIARTL, INFOSYSTCH→INFY, JSWSTL→JSWSTEEL, HINDALC0→HINDALCO, TISCO→TATASTEEL, TELCO→TATAMOTORS, UTIBANK→AXISBANK, KOTAKMAH→KOTAKBANK, HEROHONDA→HEROMOTOCO, BAJAUTOFIN→BAJFINANCE
 
+### Cash Stocks Dashboard (swing_rs.html)
+- **Source:** `j:/Swing Trading/Swing Trading/processed_adj_cash/SYMBOL.csv` (Yahoo Finance adjusted) — fetched by `fetch_cash_ohlc.js`
+
 ## Output Files
-- `Gann/6/trial_natural_cycle.html` — **Main dashboard (8.5 MB).** Two-tab layout. Rebuilt by `node build_trial.js`.
+- `Gann/6/trial_natural_cycle.html` — **Main NIFTY50 dashboard (~20 MB).** Two-tab layout. Rebuilt by `node build_trial.js`.
+- `Gann/6/swing_rs.html` — **Cash Stocks dashboard (~36 MB).** Two-tab layout. Rebuilt by `node build_swing_rs.js`.
 - `Gann/reports/` — 49 individual ZigZag candlestick chart HTMLs + index.html. Rebuilt by `node build_chart.js`.
 - `Gann/6/Gann_Cycle_Dashboard.html` — First-gen dashboard (legacy, not actively maintained).
 
 ## Build Scripts
-- `build_trial.js` — Builds `trial_natural_cycle.html`. Loads OHLC for all 75 instruments, embeds data, generates two-tab HTML.
+- `build_trial.js` — Builds `trial_natural_cycle.html`. Loads OHLC for all instruments, embeds data, generates two-tab HTML. Embeds `Backtest/best_combos_main.json` for legend strip badges.
+- `build_swing_rs.js` — Builds `swing_rs.html`. Cash stocks dashboard. Embeds `Backtest/best_combos_cash.json` for legend strip badges.
+- `fetch_adjusted.js` — Fetches Yahoo Finance adjusted OHLC → `processed_adj/`. Covers 84 symbols (NIFTY50 + main dashboard midcap).
+- `fetch_cash_ohlc.js` — Fetches Yahoo Finance adjusted OHLC → `processed_adj_cash/`. Covers ~300 cash stock symbols. BSE-only tickers handled via `YF_OVERRIDES` (e.g. GVTD→`GVT%26D.NS`, JKBANK→`J%26KBANK.NS`, ZELIO→`ZELIO.BO`).
 - `build_chart.js` — Builds per-stock ZigZag chart HTMLs into `Gann/reports/`.
-- `update_data.js` — Daily bhavcopy updater. Downloads from NSE API, appends to processed CSVs, rebuilds HTMLs. Run: `node update_data.js`. Tracks 75 symbols (50 NIFTY50 + 25 midcap).
+- `update_data.js` — Daily bhavcopy updater. Steps: bhavcopy → processed CSVs → YF main (fetch_adjusted.js) → YF cash (fetch_cash_ohlc.js) → Kite gap fill (fill_gaps_kite.js) → Kite intraday → rebuild HTMLs. Tracks ~300 symbols total. Needs a fresh Kite token each day (`node fetch_intraday_kite.js --login`).
+- `fill_gaps_kite.js` — Appends Kite daily candles to `processed_adj/` and `processed_adj_cash/` CSVs that lag the latest trading date (Yahoo partial null-close rows; SME/BSE stocks Yahoo lacks). Resolves NSE `-SM/-ST/-BE/-BZ` series and BSE; renamed tickers via `KITE_ALIASES` (HEG→HEGAM).
 - `build_confluence.js` — Standalone confluence HTML (superseded by Tab 2 in trial_natural_cycle.html).
 - `zigzag_monthly.js` — CLI: `node zigzag_monthly.js SYMBOL src.csv` → monthly pivot matrix.
 - `extract_ohlc.js` — CLI: outputs compact `[date, high, low]` arrays.
@@ -51,12 +66,13 @@ Same calendar day appearing in ≥2 of the 11 lookback years in the same month =
 - Table: 11 Gann lookback rows + confluence row + confluence map panel below
 - NIFTY_F data (1995–2025) hand-curated, embedded as JS object — bypasses ZigZag
 - All other instruments use ZigZag computed from OHLC_DATA
+- Legend strip shows best combo badge (Dev%/Depth, trades, win%) from `best_combos_main.json`
 
 **Tab 2 — Confluence Calendar:**
 - Month + Year dropdowns, ZigZag params, stats bar
 - Filter by min stocks per date (Any / ≥2 / ≥3 / ≥4)
 - View toggle: By Date (date cards with stock chips) / By Stock (table)
-- "Midcap / Smallcap Stocks" checkbox (header) — toggles inclusion of 25 midcap stocks in both tabs
+- "Midcap / Smallcap Stocks" checkbox (header) — toggles inclusion of midcap stocks in both tabs
 
 **Chart Modal:**
 - Opens via 📈 button in NC tab controls (current instrument) or 📈 icon on CF stock chips
@@ -65,15 +81,36 @@ Same calendar day appearing in ≥2 of the 11 lookback years in the same month =
 - Pivot strip at bottom (recent pivots, reverse chronological)
 - Close: ✕ button, Escape key, or click backdrop
 
-## Instruments
-**NIFTY50 (51 with index):** NIFTY (index, uses NIFTY_F), + all 50 current NIFTY50 constituents
-- Data coverage: most from 2000, newer additions from 2020 (ADANIENT, APOLLOHOSP, HDFCLIFE, TRENT, TATACONSUM)
-- SHRIRAMFIN from 2022, ZOMATO from 2021
+## swing_rs.html — Cash Stocks Dashboard
+- Tab 1 — Swing RS (relative strength / natural cycle table per stock)
+- Tab 2 — Confluence Calendar (same CF calendar logic as main dashboard)
+- **CF lookback filter:** stocks with fewer than 3 of the 11 Gann lookback years having pivot data are excluded from the CF calendar (`cfLookbackCount() < 3` check in `cfRender()`). Prevents very recent IPOs from cluttering signals.
+- Legend strip shows best combo badge from `best_combos_cash.json`
+- INVEST_DOMAIN — separate "Invest 2027" subset shown in a secondary toggle
 
-**Midcap/Smallcap FNO (25 stocks):** ADANIPOWER, POONAWALLA, SUZLON, FEDERALBNK, PERSISTENT, COFORGE, CANBK, SAIL, NMDC, RVNL, IRFC, MCX, NATIONALUM, INDHOTEL, LTTS, MFSL, HUDCO, SRF, POLYCAB, NHPC, SJVN, GMRINFRA, CONCOR, COCHINSHIP, MAZDOCK
-- Data coverage: Jan 2020 → May 2026 (6 years). Only 3–6 of 11 Gann lookback years will have pivots.
-- GMRINFRA stale until next bhavcopy update.
+## Instruments
+
+### Main Dashboard — NIFTY50 (51 with index)
+NIFTY (index, uses NIFTY_F) + NIFTY50 constituents (ZOMATO and TATAMOTORS removed 2026-10-22 — renamed/demerged, no longer on Yahoo/Kite)
+- Data coverage: most from 2000, newer additions from 2020 (ADANIENT, APOLLOHOSP, HDFCLIFE, TRENT, TATACONSUM)
+- SHRIRAMFIN from 2022
+
+### Main Dashboard — Extended Midcap (35 stocks)
+Original 25 FNO: ADANIPOWER, POONAWALLA, SUZLON, FEDERALBNK, PERSISTENT, COFORGE, CANBK, SAIL, NMDC, RVNL, IRFC, MCX, NATIONALUM, INDHOTEL, LTTS, MFSL, HUDCO, SRF, POLYCAB, NHPC, SJVN, CONCOR, COCHINSHIP, MAZDOCK
+
+Added later: BHEL, BANDHANBNK, BANKBARODA, BANKINDIA, CUB, DHANBANK, RBLBANK, DLF, OBEROIRLTY, GODREJPROP
+- Data coverage: Jan 2020 → 2026. Only 3–6 of 11 Gann lookback years will have pivots.
+- GMRINFRA removed 2026-10-22 (delisted/renamed).
 - NOTE: POONAWALLAFIN = NSE ticker POONAWALLA
+
+### Cash Stocks Dashboard (~300 symbols)
+All stocks in `fetch_cash_ohlc.js` ALL_SYMS. Includes the ~216 original stocks plus 84 added 2026-07-01 from watchlists:
+- Banks: BANDHANBNK, BANKINDIA, CUB, DHANBANK, JKBANK, MAHABANK
+- Infra/Real Estate: BRIGADE, ENGINERSIN, LODHA, MAXESTATES, RAYMONDREL, AEGISLOG
+- New-age/IPO: ATHERENERG, OLAELEC, NAZARA, RATEGAIN, SHADOWFAX, ETERNAL, CARTRADE
+- Chemicals/Pharma: HSCL, SUVEN, SUPRIYA, BALAMINES, SASKEN, SOTL, SHREEPUSHK
+- Industrial: NRBBEARING, TALBROAUTO, GABRIEL, VBL, TEJASNET, RAMCOSYS, SEDEMAC
+- PSU/Shipping: COCHINSHIP, INDHOTEL, SOLARINDS, ADANIPORTS
 
 ## Known Bugs Fixed
 - Confluence tab "By Date" view was blank — `dev` and `dep` not passed to `cfRenderDate()`. Fixed.
@@ -82,7 +119,18 @@ Same calendar day appearing in ≥2 of the 11 lookback years in the same month =
 
 ## Backtest Scripts (Backtest/ folder — outputs excluded from git)
 
-### Long-Side Systems
+### Main Dashboard Backtest (`backtest_main_sweep.js`)
+- Sweeps Dev% ∈ {2,3,4,5,7,10} × Depth ∈ {5,8,10,12,15,20} = 36 combos per stock
+- Reads from `processed_adj/` (Yahoo Finance adjusted). Covers 92 symbols.
+- Output: `best_combos_main.json` (91 stocks, format: `{"SYM": {"dev":N,"dep":N,"n":N,"w":N.N}}`)
+- `YEAR_START=2000`, `MIN_TRADES=10`, selects best Calmar ratio combo per stock
+- Top results: MFSL 47.5, BAJFINANCE 35.91, TRENT 30.78, SOLARINDS 28.79, COCHINSHIP 25.82
+
+### Cash Stocks Backtest (`backtest_cash_sweep.js`)
+- Same sweep logic, reads from `processed_adj_cash/`
+- Output: `best_combos_cash.json`
+
+### Long-Side Systems (main dashboard)
 - `backtest_low_entry.js` — System 1 (Low Entry Long): entry at confLow, SL below confLow, BE ratchet at confHigh.
 - `backtest_long_refined.js` — System 2 (Breakout Long): entry above confHigh, SL at confLow, ratchets at 1R/2R/3R.
 - `backtest_combined.js` — Both long systems in one tabbed HTML. Auto-selects top 15 by Calmar r2 (≥5 trades).
@@ -123,7 +171,6 @@ BE ratchet May-09, 1.5R lock May-10, 2R lock May-12. r1=+1R, r2=+1.5R, r3=+2R.
 ## Deferred
 - Dynamic Cycle tab — explicitly deferred, will be worked on later.
 - BANKNIFTY_F, FINNIFTY instruments — skipped for now.
-- Additional instruments beyond current 75 — user will guide later.
 
 ## GitHub
 Repository: https://github.com/rajat07august/GANN-Natural-Cycle.git

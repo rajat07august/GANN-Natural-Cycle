@@ -21,9 +21,10 @@ const http  = require('http');
 const { execSync } = require('child_process');
 
 // ── Paths ─────────────────────────────────────────────────────
-const BHAVDATA_DIR  = 'j:/Swing Trading/Swing Trading/nse-bhavdata';
-const PROCESSED_DIR = 'j:/Swing Trading/Swing Trading/processed';
-const GANN_DIR      = path.resolve(__dirname);
+const BHAVDATA_DIR       = 'j:/Swing Trading/Swing Trading/nse-bhavdata';
+const PROCESSED_DIR      = 'j:/Swing Trading/Swing Trading/processed';
+const PROCESSED_ADJ_CASH = 'j:/Swing Trading/Swing Trading/processed_adj_cash';
+const GANN_DIR           = path.resolve(__dirname);
 
 // ── NIFTY50 symbols to track (current NSE names) ──────────────
 const NIFTY50_SYMS = new Set([
@@ -35,8 +36,8 @@ const NIFTY50_SYMS = new Set([
   'ITC','JSWSTEEL','KOTAKBANK','LT','M&M',
   'MARUTI','NESTLEIND','NTPC','ONGC','POWERGRID',
   'RELIANCE','SBIN','SHRIRAMFIN','SUNPHARMA','TATACONSUM',
-  'TATAMOTORS','TATASTEEL','TCS','TECHM','TITAN',
-  'TRENT','ULTRACEMCO','WIPRO','ZOMATO',
+  'TATASTEEL','TCS','TECHM','TITAN',
+  'TRENT','ULTRACEMCO','WIPRO',
 ]);
 
 // ── Midcap / Smallcap FNO symbols ────────────────────────────
@@ -44,11 +45,18 @@ const MIDCAP_SYMS = new Set([
   'ADANIPOWER','POONAWALLA','SUZLON','FEDERALBNK','PERSISTENT',
   'COFORGE','CANBK','SAIL','NMDC','RVNL','IRFC','MCX',
   'NATIONALUM','INDHOTEL','LTTS','MFSL','HUDCO','SRF',
-  'POLYCAB','NHPC','SJVN','GMRINFRA','CONCOR',
+  'POLYCAB','NHPC','SJVN','CONCOR',
   'COCHINSHIP','MAZDOCK',
 ]);
 
-const ALL_TRACKED_SYMS = new Set([...NIFTY50_SYMS, ...MIDCAP_SYMS]);
+// ── Cash stocks — dynamically loaded from processed_adj_cash/ ─
+const CASH_SYMS = new Set(
+  fs.existsSync(PROCESSED_ADJ_CASH)
+    ? fs.readdirSync(PROCESSED_ADJ_CASH).filter(f => f.endsWith('.csv')).map(f => f.replace('.csv',''))
+    : []
+);
+
+const ALL_TRACKED_SYMS = new Set([...NIFTY50_SYMS, ...MIDCAP_SYMS, ...CASH_SYMS]);
 
 // ── Helpers ───────────────────────────────────────────────────
 function pad(n) { return String(n).padStart(2,'0'); }
@@ -338,12 +346,28 @@ async function main() {
     console.log(`  Total: ${totalAppended} row(s) appended across ${ALL_TRACKED_SYMS.size} stocks.`);
   }
 
-  // ── STEP 3: Refresh adjusted OHLC from Yahoo Finance ──────
-  console.log('\n[3/5] Refreshing adjusted OHLC from Yahoo Finance...');
+  // ── STEP 3: Refresh adjusted OHLC from Yahoo Finance (main) ─
+  console.log('\n[3/6] Refreshing adjusted OHLC from Yahoo Finance (main dashboard)...');
   try {
     execSync(`node "${path.join(GANN_DIR, 'fetch_adjusted.js')}"`, { stdio:'inherit' });
   } catch(e) {
     console.error('  ✗ fetch_adjusted.js failed:', e.stderr?.toString() || e.message);
+  }
+
+  // ── STEP 3.5: Refresh adjusted OHLC for cash stocks ────────
+  console.log('\n[3.5/6] Refreshing adjusted OHLC from Yahoo Finance (cash stocks)...');
+  try {
+    execSync(`node "${path.join(GANN_DIR, 'fetch_cash_ohlc.js')}"`, { stdio:'inherit' });
+  } catch(e) {
+    console.error('  ✗ fetch_cash_ohlc.js failed:', e.stderr?.toString() || e.message);
+  }
+
+  // ── STEP 3.7: Fill Yahoo gaps (lagging days, SME/BSE) from Kite daily ─
+  console.log('\n[3.7/6] Filling Yahoo gaps from Kite daily candles...');
+  try {
+    execSync(`node "${path.join(GANN_DIR, 'fill_gaps_kite.js')}"`, { stdio:'inherit' });
+  } catch(e) {
+    console.error('  ✗ fill_gaps_kite.js failed — if token expired: node fetch_intraday_kite.js --login');
   }
 
   // ── STEP 4: Refresh intraday 60-min data from Kite ─────────
@@ -351,7 +375,7 @@ async function main() {
   if (fs.existsSync(kiteCfg)) {
     const kc = JSON.parse(fs.readFileSync(kiteCfg,'utf8'));
     if (kc.api_key && kc.access_token) {
-      console.log('\n[4/5] Refreshing 60-min intraday data from Kite...');
+      console.log('\n[4/6] Refreshing 60-min intraday data from Kite...');
       try {
         execSync(`node "${path.join(GANN_DIR, 'fetch_intraday_kite.js')}"`, { stdio:'inherit' });
       } catch(e) {
@@ -367,7 +391,7 @@ async function main() {
   }
 
   // ── STEP 5: Rebuild HTML files ─────────────────────────────
-  console.log('\n[5/5] Rebuilding HTML dashboards...');
+  console.log('\n[5/6] Rebuilding HTML dashboards...');
 
   try {
     console.log('  Building trial_natural_cycle.html...');
@@ -383,6 +407,15 @@ async function main() {
     console.log('  ✓ All ZigZag charts + index.html');
   } catch(e) {
     console.error('  ✗ build_chart.js failed:', e.stderr?.toString() || e.message);
+  }
+
+  // ── STEP 6: Rebuild cash stocks HTML ───────────────────────
+  console.log('\n[6/6] Rebuilding cash stocks dashboard (swing_rs.html)...');
+  try {
+    execSync(`node "${path.join(GANN_DIR, 'build_swing_rs.js')}"`, { stdio:'pipe' });
+    console.log('  ✓ swing_rs.html');
+  } catch(e) {
+    console.error('  ✗ build_swing_rs.js failed:', e.stderr?.toString() || e.message);
   }
 
   console.log('\n' + '═'.repeat(60));

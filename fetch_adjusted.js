@@ -43,33 +43,48 @@ const NIFTY50_SYMS = [
   'ITC','JSWSTEEL','KOTAKBANK','LT','M&M',
   'MARUTI','NESTLEIND','NTPC','ONGC','POWERGRID',
   'RELIANCE','SBIN','SHRIRAMFIN','SUNPHARMA','TATACONSUM',
-  'TATAMOTORS','TATASTEEL','TCS','TECHM','TITAN',
-  'TRENT','ULTRACEMCO','WIPRO','ZOMATO',
+  'TATASTEEL','TCS','TECHM','TITAN',
+  'TRENT','ULTRACEMCO','WIPRO',
 ];
 
 const MIDCAP_SYMS = [
   'ADANIPOWER','POONAWALLA','SUZLON','FEDERALBNK','PERSISTENT',
   'COFORGE','CANBK','SAIL','NMDC','RVNL','IRFC','MCX',
   'NATIONALUM','INDHOTEL','LTTS','MFSL','HUDCO','SRF',
-  'POLYCAB','NHPC','SJVN','GMRINFRA','CONCOR',
-  'COCHINSHIP','MAZDOCK',
+  'POLYCAB','NHPC','SJVN','CONCOR',
+  'COCHINSHIP','MAZDOCK','BHEL',
+  'BANDHANBNK','BANKBARODA','BANKINDIA','CUB','DHANBANK','RBLBANK',
+  'DLF','OBEROIRLTY','GODREJPROP',
 ];
 
-const ALL_SYMS = [...NIFTY50_SYMS, ...MIDCAP_SYMS];
+// Monthly Breakout symbols not in the lists above (MB_ONLY_SYMS in build_trial.js)
+const MB_SYMS = [
+  'SOLARINDS','POWERINDIA','IDEA','MOTHERSON','MAXHEALTH','MANKIND',
+  'AUROPHARMA','FORTIS','LAURUSLABS','NAM-INDIA','ANGELONE',
+];
+
+const ALL_SYMS = [...NIFTY50_SYMS, ...MIDCAP_SYMS, ...MB_SYMS];
 
 // ── Fetch one symbol ──────────────────────────────────────────
 async function fetchSymbol(sym) {
   const yfSym = toYFSym(sym);
   let raw;
-  try {
-    raw = await yf.historical(yfSym, {
-      period1:  START,
-      period2:  END,
-      interval: '1d',
-      events:   'history',
-    }, { validateResult: false });
-  } catch (e) {
-    return { sym, status: 'error', msg: e.message };
+  // Yahoo sometimes returns a partial (null-close) row for the latest day;
+  // retry with period2 = yesterday to drop it, same as fetch_cash_ohlc.js
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  for (const period2 of [END, yesterday]) {
+    try {
+      raw = await yf.historical(yfSym, {
+        period1:  START,
+        period2,
+        interval: '1d',
+        events:   'history',
+      }, { validateResult: false });
+      break;
+    } catch (e) {
+      if (period2 === END && /null values/i.test(e.message)) continue;
+      return { sym, status: 'error', msg: e.message };
+    }
   }
 
   if (!raw || !raw.length) {
@@ -164,4 +179,5 @@ async function main() {
   console.log('═'.repeat(60));
 }
 
-main().catch(e => { console.error('Fatal:', e); process.exit(1); });
+if (require.main === module) main().catch(e => { console.error('Fatal:', e); process.exit(1); });
+module.exports = { ALL_SYMS, toYFSym };
