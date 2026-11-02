@@ -7,6 +7,11 @@
 - **NIFTY50 Dashboard:** https://gann-natural-cycle.vercel.app
 - **Cash Stocks Dashboard:** https://cash-stocks-gann.vercel.app
 
+### Deployment (both auto-deploy on `git push origin master`)
+- `gann-natural-cycle` Vercel project — repo root; root `vercel.json` (outputDirectory `Gann/6`, `/` → `trial_natural_cycle.html`).
+- `cash-stocks-gann` Vercel project — same GitHub repo, **Root Directory `Gann/6`** so it uses `Gann/6/vercel.json` (`/` → `swing_rs.html`). Git-connected since 2026-11-02; previously deployed by Vercel CLI (no longer needed).
+- Only git-tracked files are published, so `Gann/6/1/` source Excel and untracked files never go live.
+
 ## Source Files (do not modify)
 - `Gann/6/1/Natural Cycle.xlsx` — 48 sheets. NIFTY_F (1995–2025), BANKNIFTY_F (2005–2023), FINNIFTY (2012–2023), TCS, ~20 other stocks.
 - `Gann/6/1/Dynamic Cycle_.xlsm` — 74 sheets. HOLIDAYS sheet, 70+ NSE instrument sheets, RESULT sheet (6112 rows).
