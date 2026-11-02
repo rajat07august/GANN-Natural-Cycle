@@ -26,7 +26,7 @@
 
 ## Output Files
 - `Gann/6/trial_natural_cycle.html` — **Main NIFTY50 dashboard (~20 MB).** Two-tab layout. Rebuilt by `node build_trial.js`.
-- `Gann/6/swing_rs.html` — **Cash Stocks dashboard (~36 MB).** Two-tab layout. Rebuilt by `node build_swing_rs.js`.
+- `Gann/6/swing_rs.html` — **Cash Stocks dashboard (~78 MB — GitHub hard limit is 100 MB).** Two-tab layout. Rebuilt by `node build_swing_rs.js`.
 - `Gann/reports/` — 49 individual ZigZag candlestick chart HTMLs + index.html. Rebuilt by `node build_chart.js`.
 - `Gann/6/Gann_Cycle_Dashboard.html` — First-gen dashboard (legacy, not actively maintained).
 
@@ -34,9 +34,9 @@
 - `build_trial.js` — Builds `trial_natural_cycle.html`. Loads OHLC for all instruments, embeds data, generates two-tab HTML. Embeds `Backtest/best_combos_main.json` for legend strip badges.
 - `build_swing_rs.js` — Builds `swing_rs.html`. Cash stocks dashboard. Embeds `Backtest/best_combos_cash.json` for legend strip badges.
 - `fetch_adjusted.js` — Fetches Yahoo Finance adjusted OHLC → `processed_adj/`. Covers 84 symbols (NIFTY50 + main dashboard midcap).
-- `fetch_cash_ohlc.js` — Fetches Yahoo Finance adjusted OHLC → `processed_adj_cash/`. Covers ~300 cash stock symbols. BSE-only tickers handled via `YF_OVERRIDES` (e.g. GVTD→`GVT%26D.NS`, JKBANK→`J%26KBANK.NS`, ZELIO→`ZELIO.BO`).
+- `fetch_cash_ohlc.js` — Fetches Yahoo Finance adjusted OHLC → `processed_adj_cash/`. Covers ~600 cash stock symbols. BSE-only tickers handled via `YF_OVERRIDES` (e.g. GVTD→`GVT%26D.NS`, JKBANK→`J%26KBANK.NS`, ZELIO→`ZELIO.BO`).
 - `build_chart.js` — Builds per-stock ZigZag chart HTMLs into `Gann/reports/`.
-- `update_data.js` — Daily bhavcopy updater. Steps: bhavcopy → processed CSVs → YF main (fetch_adjusted.js) → YF cash (fetch_cash_ohlc.js) → Kite gap fill (fill_gaps_kite.js) → Kite intraday → rebuild HTMLs. Tracks ~300 symbols total. Needs a fresh Kite token each day (`node fetch_intraday_kite.js --login`).
+- `update_data.js` — Daily bhavcopy updater. Steps: bhavcopy → processed CSVs → YF main (fetch_adjusted.js) → YF cash (fetch_cash_ohlc.js) → Kite gap fill (fill_gaps_kite.js) → Kite intraday → rebuild HTMLs. Tracks ~690 symbols total. Needs a fresh Kite token each day (`node fetch_intraday_kite.js --login`).
 - `fill_gaps_kite.js` — Appends Kite daily candles to `processed_adj/` and `processed_adj_cash/` CSVs that lag the latest trading date (Yahoo partial null-close rows; SME/BSE stocks Yahoo lacks). Resolves NSE `-SM/-ST/-BE/-BZ` series and BSE; renamed tickers via `KITE_ALIASES` (HEG→HEGAM).
 - `build_confluence.js` — Standalone confluence HTML (superseded by Tab 2 in trial_natural_cycle.html).
 - `zigzag_monthly.js` — CLI: `node zigzag_monthly.js SYMBOL src.csv` → monthly pivot matrix.
@@ -103,7 +103,7 @@ Added later: BHEL, BANDHANBNK, BANKBARODA, BANKINDIA, CUB, DHANBANK, RBLBANK, DL
 - GMRINFRA removed 2026-10-22 (delisted/renamed).
 - NOTE: POONAWALLAFIN = NSE ticker POONAWALLA
 
-### Cash Stocks Dashboard (~300 symbols)
+### Cash Stocks Dashboard (~600 symbols)
 All stocks in `fetch_cash_ohlc.js` ALL_SYMS. Includes the ~216 original stocks plus 84 added 2026-07-01 from watchlists:
 - Banks: BANDHANBNK, BANKINDIA, CUB, DHANBANK, JKBANK, MAHABANK
 - Infra/Real Estate: BRIGADE, ENGINERSIN, LODHA, MAXESTATES, RAYMONDREL, AEGISLOG
@@ -111,6 +111,12 @@ All stocks in `fetch_cash_ohlc.js` ALL_SYMS. Includes the ~216 original stocks p
 - Chemicals/Pharma: HSCL, SUVEN, SUPRIYA, BALAMINES, SASKEN, SOTL, SHREEPUSHK
 - Industrial: NRBBEARING, TALBROAUTO, GABRIEL, VBL, TEJASNET, RAMCOSYS, SEDEMAC
 - PSU/Shipping: COCHINSHIP, INDHOTEL, SOLARINDS, ADANIPORTS
+
+Added 2026-11-02: 101 from Ratio Charts / Invest 2027 / EXECUTION / Blue list watchlists + 109 from Nifty LargeMid 250 (only those NOT already on the main dashboard — main-dashboard stocks are not duplicated here). Also 35 added to INVEST_DOMAIN (now 83).
+- Rule: when new watchlists arrive, add new symbols; never remove existing ones that dropped off the lists.
+- Renamed tickers: ICICIPRULI→`ICICILIFE.NS`, M&MFIN→`M%26MFIN.NS`; TMPV (Tata Motors PV, old TATAMOTORS history), TMCV (Tata Motors CV), LTM (LTIMindtree).
+- BSE-sourced for longer history: HALDYNGL, JAYKAY, ALUFLUOR. BSE-only: SHHARICH, SYSTEMATIC, SUNITATOOL, SRIGEE, NSE (NSE Ltd).
+- No Yahoo data — Kite-only (via fill_gaps_kite.js, NSE `-SM` series): OBSCP, PARTH.
 
 ## Known Bugs Fixed
 - Confluence tab "By Date" view was blank — `dev` and `dep` not passed to `cfRenderDate()`. Fixed.
