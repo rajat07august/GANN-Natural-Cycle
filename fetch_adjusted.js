@@ -26,7 +26,10 @@ const END      = new Date().toISOString().split('T')[0];
 // ── Symbol → Yahoo Finance ticker ────────────────────────────
 // NSE stocks use .NS suffix. Special chars are handled by yahoo-finance2.
 const YF_OVERRIDES = {
-  'M&M':      'M%26M.NS',   // Mahindra & Mahindra
+  'M&M':        'M%26M.NS',      // Mahindra & Mahindra
+  'M&MFIN':     'M%26MFIN.NS',   // M&M Financial
+  'GVTD':       'GVT%26D.NS',    // GE Vernova T&D
+  'ICICIPRULI': 'ICICILIFE.NS',  // renamed on NSE
 };
 
 function toYFSym(sym) {
@@ -63,7 +66,10 @@ const MB_SYMS = [
   'AUROPHARMA','FORTIS','LAURUSLABS','NAM-INDIA','ANGELONE',
 ];
 
-const ALL_SYMS = [...NIFTY50_SYMS, ...MIDCAP_SYMS, ...MB_SYMS];
+// Nifty LargeMid 250 tickbox group (shared list; overlaps above are de-duplicated)
+const { LARGEMID_SYMS } = require('./largemid_list.js');
+
+const ALL_SYMS = [...new Set([...NIFTY50_SYMS, ...MIDCAP_SYMS, ...MB_SYMS, ...LARGEMID_SYMS])];
 
 // ── Fetch one symbol ──────────────────────────────────────────
 async function fetchSymbol(sym) {

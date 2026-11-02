@@ -262,10 +262,22 @@ for (const { sym } of MB_INSTRUMENTS) {
   ohlcBlocks[sym] = rows.map(r => `['${r.date}',${r.open.toFixed(2)},${r.high.toFixed(2)},${r.low.toFixed(2)},${r.close.toFixed(2)}]`).join(',');
 }
 
-const ohlcDataJS = [
-  ...ALL_INSTRUMENTS.filter(i => !i.isIndex),
-  ...MB_INSTRUMENTS.filter(i => MB_ONLY_SYMS.has(i.sym)),
-].map(({ sym }) => `  '${sym}':[${ohlcBlocks[sym]}]`).join(',\n');
+// ── Nifty LargeMid 250 (tickbox group; excludes NIFTY50, may overlap Midcap/MB) ──
+const { LARGEMID_INSTRUMENTS } = require('./largemid_list.js');
+console.error('Processing Nifty LargeMid 250 extra symbols...');
+for (const { sym } of LARGEMID_INSTRUMENTS) {
+  if (ohlcBlocks[sym]) continue; // already loaded
+  const rows = mergeRows(sym);
+  console.error(`  ${sym}: ${rows.length ? `${rows.length} rows (${rows[0].date} → ${rows[rows.length-1].date})` : 'NO DATA'}`);
+  ohlcBlocks[sym] = rows.map(r => `['${r.date}',${r.open.toFixed(2)},${r.high.toFixed(2)},${r.low.toFixed(2)},${r.close.toFixed(2)}]`).join(',');
+}
+
+const ohlcSyms = [...new Set([
+  ...ALL_INSTRUMENTS.filter(i => !i.isIndex).map(i => i.sym),
+  ...MB_INSTRUMENTS.filter(i => MB_ONLY_SYMS.has(i.sym)).map(i => i.sym),
+  ...LARGEMID_INSTRUMENTS.map(i => i.sym),
+])];
+const ohlcDataJS = ohlcSyms.map(sym => `  '${sym}':[${ohlcBlocks[sym]}]`).join(',\n');
 
 // ── Selector options ──────────────────────────────────────────
 const instrOptionsNifty = INSTRUMENTS.map(({ sym, name }) =>
@@ -277,6 +289,10 @@ const instrOptionsMidcap = MIDCAP_INSTRUMENTS.map(({ sym, name }) =>
 ).join('\n        ');
 
 const instrOptionsMB = MB_INSTRUMENTS.map(({ sym, name }) =>
+  `<option value="${sym}">${name}</option>`
+).join('\n        ');
+
+const instrOptionsLM = LARGEMID_INSTRUMENTS.map(({ sym, name }) =>
   `<option value="${sym}">${name}</option>`
 ).join('\n        ');
 
@@ -324,6 +340,7 @@ const NIFTY_F_JS = `{
 
 const instrJS = JSON.stringify(INSTRUMENTS.map(({sym,name,isIndex}) => ({sym,name,isIndex:!!isIndex})));
 const midcapInstrJS = JSON.stringify(MIDCAP_INSTRUMENTS.map(({sym,name}) => ({sym,name})));
+const largemidInstrJS = JSON.stringify(LARGEMID_INSTRUMENTS.map(({sym,name}) => ({sym,name})));
 
 // ── HTML ──────────────────────────────────────────────────────
 const html = `<!DOCTYPE html>
@@ -563,7 +580,12 @@ const html = `<!DOCTYPE html>
     <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;font-size:12px;color:var(--sub)">
       <input type="checkbox" id="midcap-toggle" onchange="toggleMidcap()" style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer">
       <span style="color:var(--text)">Midcap / Smallcap Stocks</span>
-      <span style="background:#1a2a3a;border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:10px;color:var(--accent)">25 stocks</span>
+      <span style="background:#1a2a3a;border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:10px;color:var(--accent)">${MIDCAP_INSTRUMENTS.length} stocks</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;font-size:12px;color:var(--sub)">
+      <input type="checkbox" id="lm-toggle" onchange="toggleLM()" style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer">
+      <span style="color:var(--text)">Nifty LargeMid 250</span>
+      <span style="background:#1a2a3a;border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:10px;color:var(--accent)">${LARGEMID_INSTRUMENTS.length} stocks</span>
     </label>
     <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;font-size:12px;color:var(--sub)">
       <input type="checkbox" id="mb-toggle" onchange="toggleMB()" style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer">
@@ -593,6 +615,9 @@ const html = `<!DOCTYPE html>
         </optgroup>
         <optgroup id="nc-mb-optgroup" label="Monthly Breakout" style="display:none">
         ${instrOptionsMB}
+        </optgroup>
+        <optgroup id="nc-lm-optgroup" label="Nifty LargeMid 250" style="display:none">
+        ${instrOptionsLM}
         </optgroup>
       </select>
     </div>
@@ -810,6 +835,7 @@ const html = `<!DOCTYPE html>
 // ════════════════════════════════════════════════════════
 const INSTRUMENTS = ${instrJS};
 const MIDCAP_INSTRUMENTS = ${midcapInstrJS};
+const LARGEMID_INSTRUMENTS = ${largemidInstrJS};
 const BEST_COMBOS = ${bestCombosJS};
 const NIFTY_F = ${NIFTY_F_JS};
 const OHLC_DATA = {
@@ -970,7 +996,7 @@ function openChartFromNC() {
   const sym = document.getElementById('nc-instr').value;
   const dev = parseFloat(document.getElementById('nc-dev').value);
   const dep = parseInt(document.getElementById('nc-dep').value);
-  const instr = [...INSTRUMENTS, ...MIDCAP_INSTRUMENTS, ...MONTHLY_BREAKOUT].find(i => i.sym === sym);
+  const instr = [...INSTRUMENTS, ...MIDCAP_INSTRUMENTS, ...MONTHLY_BREAKOUT, ...LARGEMID_INSTRUMENTS].find(i => i.sym === sym);
   if (!instr || sym === 'NIFTY') { alert('No chart data for ' + sym); return; }
   openChart(sym, instr.name, dev, dep);
 }
@@ -1077,10 +1103,26 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') closeChart(); 
 function getActiveInstruments() {
   const showMC = document.getElementById('midcap-toggle').checked;
   const showMB = document.getElementById('mb-toggle').checked;
+  const showLM = document.getElementById('lm-toggle').checked;
   const list = [...INSTRUMENTS];
   if (showMC) list.push(...MIDCAP_INSTRUMENTS);
   if (showMB) list.push(...MONTHLY_BREAKOUT.filter(i => !list.some(x => x.sym === i.sym)));
+  if (showLM) list.push(...LARGEMID_INSTRUMENTS.filter(i => !list.some(x => x.sym === i.sym)));
   return list;
+}
+
+// After a group is hidden, fall back to NIFTY only if the selected stock
+// is no longer in any visible group (groups overlap).
+function ncResetIfHidden() {
+  const sel = document.getElementById('nc-instr');
+  if (!getActiveInstruments().some(i => i.sym === sel.value)) { sel.value = 'NIFTY'; ncOnInstrChange(); }
+}
+
+function toggleLM() {
+  const show = document.getElementById('lm-toggle').checked;
+  document.getElementById('nc-lm-optgroup').style.display = show ? '' : 'none';
+  if (!show) ncResetIfHidden();
+  if (_activeTab === 'conf') cfRender();
 }
 
 function toggleMidcap() {
@@ -1090,9 +1132,7 @@ function toggleMidcap() {
     grp.style.display = '';
   } else {
     grp.style.display = 'none';
-    const sel = document.getElementById('nc-instr');
-    const isMidcap = MIDCAP_INSTRUMENTS.some(i => i.sym === sel.value);
-    if (isMidcap) { sel.value = 'NIFTY'; ncOnInstrChange(); }
+    ncResetIfHidden();
   }
   if (_activeTab === 'conf') cfRender();
 }
@@ -1104,9 +1144,7 @@ function toggleMB() {
     grp.style.display = '';
   } else {
     grp.style.display = 'none';
-    const sel = document.getElementById('nc-instr');
-    const isMB = MONTHLY_BREAKOUT.some(i => i.sym === sel.value);
-    if (isMB) { sel.value = 'NIFTY'; ncOnInstrChange(); }
+    ncResetIfHidden();
   }
   if (_activeTab === 'conf') cfRender();
 }

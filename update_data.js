@@ -56,7 +56,10 @@ const CASH_SYMS = new Set(
     : []
 );
 
-const ALL_TRACKED_SYMS = new Set([...NIFTY50_SYMS, ...MIDCAP_SYMS, ...CASH_SYMS]);
+// ── Nifty LargeMid 250 (main dashboard tickbox group) ────────
+const { LARGEMID_SYMS } = require('./largemid_list.js');
+
+const ALL_TRACKED_SYMS = new Set([...NIFTY50_SYMS, ...MIDCAP_SYMS, ...LARGEMID_SYMS, ...CASH_SYMS]);
 
 // ── Helpers ───────────────────────────────────────────────────
 function pad(n) { return String(n).padStart(2,'0'); }
