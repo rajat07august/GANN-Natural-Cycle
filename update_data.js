@@ -91,6 +91,22 @@ function addDays(d, n) {
   return r;
 }
 
+// NSE's reports API sometimes 404s on real trading days, so weekdays in this
+// window that have no bhavcopy file are retried on every run, and every file
+// in it is re-processed (appendToProcessed skips dates already present).
+const BHAV_LOOKBACK_DAYS = 30;
+
+function bhavWindowStart(lastDate, today) {
+  const lookback = addDays(today, -BHAV_LOOKBACK_DAYS);
+  if (!lastDate) return new Date(2026, 0, 1);
+  const next = addDays(new Date(lastDate + 'T00:00:00'), 1);
+  return next < lookback ? next : lookback;
+}
+
+function toISO(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
 function bhavFilePath(d) {
   return path.join(BHAVDATA_DIR, String(d.getFullYear()),
     `sec_bhavdata_full_${dateToFileStr(d)}.csv`);
@@ -161,6 +177,11 @@ async function downloadBhav(d, cookies) {
       'Cookie': cookies,
     });
 
+    // For a holiday / unpublished day NSE can return the latest report
+    // instead (DATE1 = an earlier day) — treat that as not available
+    if (res.status === 200 && res.body.includes('SYMBOL') && !res.body.includes(` ${dateStr},`)) {
+      return 'holiday';
+    }
     if (res.status === 200 && res.body.includes('SYMBOL')) {
       fs.writeFileSync(filePath, res.body, 'utf8');
       return 'downloaded';
@@ -226,34 +247,40 @@ function appendToProcessed(rowsByDate) {
 
     // Read existing dates to avoid duplicates
     let existingDates = new Set();
-    let hasHeader = false;
+    let lines = [];
     if (fs.existsSync(filePath)) {
-      const lines = fs.readFileSync(filePath,'utf8').trim().split('\n');
-      hasHeader = lines.length > 0;
+      lines = fs.readFileSync(filePath,'utf8').trim().split(/\r?\n/);
       lines.slice(1).forEach(l => {
         const d = l.split(',')[1]?.trim();
         if (d) existingDates.add(d);
       });
     }
+    const lastExisting = [...existingDates].sort().slice(-1)[0];
 
-    const newRows = rows
+    const newRows = [...new Map(rows
       .filter(r => !existingDates.has(r.date))
+      .map(r => [r.date, r])).values()]
       .sort((a,b) => a.date.localeCompare(b.date));
 
     if (newRows.length === 0) continue;
 
-    let appendText = '';
-    if (!hasHeader) {
-      appendText += 'Symbol,Date,Open,High,Low,Close,Volume,Pct_Change,Vol_Avg50,EMA10,EMA20,EMA50\n';
-    }
-    newRows.forEach(r => {
-      // Append with blank indicator columns (they'll be filled by step2 if needed)
-      appendText += `${r.symbol},${r.date},${r.open},${r.high},${r.low},${r.close},${r.volume},,,,,\n`;
-    });
+    // Blank indicator columns (they'll be filled by step2 if needed)
+    const newLines = newRows.map(r =>
+      `${r.symbol},${r.date},${r.open},${r.high},${r.low},${r.close},${r.volume},,,,,`);
 
-    fs.appendFileSync(filePath, appendText, 'utf8');
+    if (!lines.length) {
+      fs.writeFileSync(filePath,
+        'Symbol,Date,Open,High,Low,Close,Volume,Pct_Change,Vol_Avg50,EMA10,EMA20,EMA50\n' + newLines.join('\n') + '\n', 'utf8');
+    } else if (lastExisting && newRows[0].date < lastExisting) {
+      // Backfilled day older than the file's last row — rewrite in date order
+      const body = [...lines.slice(1), ...newLines]
+        .sort((a,b) => (a.split(',')[1] || '').localeCompare(b.split(',')[1] || ''));
+      fs.writeFileSync(filePath, [lines[0], ...body].join('\n') + '\n', 'utf8');
+    } else {
+      fs.appendFileSync(filePath, newLines.join('\n') + '\n', 'utf8');
+    }
     totalAppended += newRows.length;
-    console.log(`  ${sym}: +${newRows.length} row(s) → ${[...existingDates].sort().slice(-1)[0]} → ${newRows[newRows.length-1].date}`);
+    console.log(`  ${sym}: +${newRows.length} row(s) [${newRows.map(r => r.date).join(', ')}]`);
   }
   return totalAppended;
 }
@@ -273,23 +300,20 @@ async function main() {
   if (!rebuildOnly) {
     console.log('\n[1/3] Downloading missing bhavcopy files...');
 
-    const lastDate = getLastProcessedDate();
-    const startFrom = lastDate
-      ? addDays(new Date(lastDate), 1)
-      : new Date('2026-01-01');
     const today = new Date();
     today.setHours(0,0,0,0);
+    const startFrom = bhavWindowStart(getLastProcessedDate(), today);
 
-    // Collect weekdays from startFrom to today
+    // Weekdays from startFrom to today (inclusive) with no bhavcopy file yet
     const datesToCheck = [];
     for (let d = new Date(startFrom); d <= today; d = addDays(d,1)) {
-      if (!isWeekend(d)) datesToCheck.push(new Date(d));
+      if (!isWeekend(d) && !fs.existsSync(bhavFilePath(d))) datesToCheck.push(new Date(d));
     }
 
     if (datesToCheck.length === 0) {
       console.log('  All bhavcopy files already up to date.');
     } else {
-      console.log(`  Checking ${datesToCheck.length} trading day(s) from ${dateToNSEStr(startFrom)} to ${dateToNSEStr(today)}...`);
+      console.log(`  Checking ${datesToCheck.length} weekday(s) without bhavcopy from ${dateToNSEStr(startFrom)} to ${dateToNSEStr(today)}...`);
       const cookies = await getNSECookies();
 
       let downloaded = 0, holidays = 0, errors = 0;
@@ -298,7 +322,7 @@ async function main() {
         const label = `  ${dateToNSEStr(d)}:`;
         if (result === 'downloaded') { console.log(`${label} ✓ downloaded`); downloaded++; }
         else if (result === 'exists')  { /* silent */ }
-        else if (result === 'holiday') { console.log(`${label} holiday/closed`); holidays++; }
+        else if (result === 'holiday') { console.log(`${label} not available (holiday, or not published yet — retried next run)`); holidays++; }
         else { console.log(`${label} ${result}`); errors++; }
       }
       console.log(`  Done. Downloaded: ${downloaded}, Holidays/closed: ${holidays}, Errors: ${errors}`);
@@ -313,7 +337,9 @@ async function main() {
   const lastDate = getLastProcessedDate();
   console.log(`  Last processed date: ${lastDate || 'unknown'}`);
 
-  // Find all bhavcopy files newer than lastDate
+  // Bhavcopy files in the lookback window (or newer than lastDate if older) —
+  // catches days backfilled after later days were already processed
+  const windowStart = toISO(bhavWindowStart(lastDate, (() => { const t = new Date(); t.setHours(0,0,0,0); return t; })()));
   const newBhavFiles = [];
   for (const year of ['2024','2025','2026']) {
     const dir = path.join(BHAVDATA_DIR, year);
@@ -326,7 +352,7 @@ async function main() {
         const m = f.match(/sec_bhavdata_full_(\d{2})(\d{2})(\d{4})\.csv/);
         if (!m) return;
         const isoDate = `${m[3]}-${m[2]}-${m[1]}`;
-        if (!lastDate || isoDate > lastDate) {
+        if (isoDate >= windowStart) {
           newBhavFiles.push({ path: path.join(dir, f), date: isoDate });
         }
       });
