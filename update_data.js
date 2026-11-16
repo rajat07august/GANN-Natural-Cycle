@@ -160,6 +160,22 @@ async function downloadBhav(d, cookies) {
   fs.mkdirSync(dir, { recursive: true });
 
   const dateStr = dateToNSEStr(d);
+  const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+  // Primary: NSE archive file (no session needed). The www.nseindia.com
+  // reports API started 301-redirecting off-domain in Nov 2026.
+  try {
+    const res = await httpGet(
+      `https://nsearchives.nseindia.com/products/content/sec_bhavdata_full_${dateToFileStr(d)}.csv`,
+      { 'User-Agent': UA, 'Accept': '*/*' });
+    if (res.status === 200 && res.body.includes('SYMBOL')) {
+      if (!res.body.includes(` ${dateStr},`)) return 'holiday';
+      fs.writeFileSync(filePath, res.body, 'utf8');
+      return 'downloaded';
+    }
+    if (res.status === 404) return 'holiday';
+  } catch (e) { /* fall through to the reports API */ }
+
   const params = new URLSearchParams({
     archives: '[{"name":"Full Bhavcopy and Security Deliverable data","type":"daily-reports","category":"capital-market","section":"equities"}]',
     date: dateStr,
