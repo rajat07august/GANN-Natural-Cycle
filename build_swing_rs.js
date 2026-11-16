@@ -504,6 +504,8 @@ const INSTRUMENTS = [
   { sym:'HALDYNGL',   name:'Haldyn Glass'                    },
   { sym:'AMBIKCO',    name:'Ambika Cotton Mills'             },
   { sym:'DCW',        name:'DCW'                             },
+  // ── Added 2026-11-16 (on request) ─────────────────────────────
+  { sym:'ASTRAL',     name:'Astral'                          },
 ];
 
 // ── Invest 2027 Domain — separate tab + feeds CF Calendar ──────

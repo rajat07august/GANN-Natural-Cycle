@@ -138,6 +138,8 @@ const ALL_SYMS = [
   'LGEINDIA','ENRIN','USHAMART','AUGMONT','ASHIANA','LALPATHLAB',
   'BHARATFORG','WELCORP','RAYMOND','HONASA','TATVA','UFBL','DALBHARAT',
   'SIGMAADV','HALDYNGL','AMBIKCO','DCW',
+  // ── Added 2026-11-16 (on request; also in main dashboard LargeMid group) ─
+  'ASTRAL',
 ];
 
 // ── Fetch one symbol ──────────────────────────────────────────
